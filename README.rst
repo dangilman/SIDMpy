@@ -1,0 +1,37 @@
+======
+SIDMpy
+======
+
+
+.. image:: https://img.shields.io/pypi/v/sidmpy.svg
+        :target: https://pypi.python.org/pypi/sidmpy
+
+.. image:: https://img.shields.io/travis/dangilman/sidmpy.svg
+        :target: https://travis-ci.com/dangilman/sidmpy
+
+.. image:: https://readthedocs.org/projects/sidmpy/badge/?version=latest
+        :target: https://sidmpy.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
+
+
+
+Compute the central densities of SIDM halos using Kaplinghat et a. 2016
+
+
+* Free software: MIT license
+* Documentation: https://sidmpy.readthedocs.io.
+
+
+Features
+--------
+
+* TODO
+
+Credits
+-------
+
+This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+
+.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
