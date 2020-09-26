@@ -18,6 +18,7 @@ SIDMpy
 
 Compute the central densities of SIDM halos using Kaplinghat et a. 2016
 
+If you would like to use this package, please get in touch with me at gilman@astro.utoronto.ca
 
 * Free software: MIT license
 * Documentation: https://sidmpy.readthedocs.io.
