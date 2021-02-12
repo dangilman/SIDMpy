@@ -44,7 +44,7 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
         result_array = np.log10(result_array)
         result_array = np.round(result_array, 3)
         with open(filename_out, 'a') as f:
-            f.write('log_rho_vpower'+str(v_dep) +' = numpy.')
+            f.write('log_rho_vpower'+str(v_dep) +' = np.')
             f.write(str(repr(result_array))+ '\n\n')
 
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
@@ -69,7 +69,7 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
     result_array = np.log10(result_array)
     result_array = np.round(result_array, 3)
     with open(filename_out, 'a') as f:
-        f.write('log_rho_w30 = numpy.')
+        f.write('log_rho_w30 = np.')
         f.write(str(repr(result_array))+ '\n\n')
 #
 # from pyHalo.Halos.lens_cosmo import LensCosmo
