@@ -41,8 +41,8 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
         result = pool.map(single_solve, args)
         pool.close()
         result_array = numpy.array(result).reshape(dim1, dim2, dim3)
-        result_array = np.log10(result_array)
-        result_array = np.round(result_array, 3)
+        result_array = numpy.log10(result_array)
+        result_array = numpy.round(result_array, 3)
         with open(filename_out, 'a') as f:
             f.write('log_rho_vpower'+str(v_dep) +' = np.')
             f.write(str(repr(result_array))+ '\n\n')
@@ -66,8 +66,8 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
     result = pool.map(single_solve, args)
     pool.close()
     result_array = numpy.array(result).reshape(dim1, dim2, dim3)
-    result_array = np.log10(result_array)
-    result_array = np.round(result_array, 3)
+    result_array = numpy.log10(result_array)
+    result_array = numpy.round(result_array, 3)
     with open(filename_out, 'a') as f:
         f.write('log_rho_w30 = np.')
         f.write(str(repr(result_array))+ '\n\n')
