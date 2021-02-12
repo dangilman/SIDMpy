@@ -17,7 +17,7 @@ def single_solve(args):
     try:
         rho0, sigma, r1 = solve_profile(rhos, rs, cross_section_class, halo_age, **kwargs_solver)
     except:
-        rho0 = np.nan
+        rho0 = numpy.nan
     return rho0
 
 def solve_array_power_law(filename_out, function_params_physical, function_concentration,
@@ -40,9 +40,9 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
         pool = Pool(10)
         result = pool.map(single_solve, args)
         pool.close()
-        result_array = np.array(result).reshape(dim1, dim2, dim3)
+        result_array = numpy.array(result).reshape(dim1, dim2, dim3)
         with open(filename_out, 'a') as f:
-            f.write('log_rho_vpower'+str(v_dep) +' = np.')
+            f.write('log_rho_vpower'+str(v_dep) +' = numpy.')
             f.write(str(repr(result_array))+ '\n\n')
 
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
@@ -63,9 +63,9 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
     pool = Pool(10)
     result = pool.map(single_solve, args)
     pool.close()
-    result_array = np.array(result).reshape(dim1, dim2, dim3)
+    result_array = numpy.array(result).reshape(dim1, dim2, dim3)
     with open(filename_out, 'a') as f:
-        f.write('log_rho_w30 = np.')
+        f.write('log_rho_w30 = numpy.')
         f.write(str(repr(result_array))+ '\n\n')
 
 from pyHalo.Halos.lens_cosmo import LensCosmo
