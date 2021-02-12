@@ -21,7 +21,7 @@ def single_solve(args):
     return rho0
 
 def solve_array_power_law(filename_out, function_params_physical, function_concentration,
-                 function_halo_age, kwargs_solver={}):
+                 function_halo_age, kwargs_solver={}, nproc=10):
 
     dim1, dim2, dim3, dim4 = len(cross_section_normalization), len(redshifts), len(mass_values), len(v_dependence_powerlaw)
     print('ntotal: ', dim1 * dim2 * dim3 * dim4)
@@ -37,7 +37,7 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
                                               function_halo_age, kwargs_solver)
                     args.append(new)
 
-        pool = Pool(10)
+        pool = Pool(nproc)
         result = pool.map(single_solve, args)
         pool.close()
         result_array = numpy.array(result).reshape(dim1, dim2, dim3)
@@ -46,7 +46,7 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
             f.write(str(repr(result_array))+ '\n\n')
 
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
-                 function_halo_age, kwargs_solver={}):
+                 function_halo_age, kwargs_solver={}, nproc=10):
 
     dim1, dim2, dim3 = len(cross_section_normalization), len(redshifts), len(mass_values)
     print('ntotal: ', dim1 * dim2 * dim3)
@@ -60,19 +60,19 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
                                           function_halo_age, kwargs_solver)
                 args.append(new)
 
-    pool = Pool(10)
+    pool = Pool(nproc)
     result = pool.map(single_solve, args)
     pool.close()
     result_array = numpy.array(result).reshape(dim1, dim2, dim3)
     with open(filename_out, 'a') as f:
         f.write('log_rho_w30 = numpy.')
         f.write(str(repr(result_array))+ '\n\n')
-
-from pyHalo.Halos.lens_cosmo import LensCosmo
-lc = LensCosmo()
-function_params_physical = lc.NFW_params_physical
-function_concentration = lc.NFW_concentration
-function_halo_age = lc.cosmo.halo_age
-kwargs_solver = {'rmin_profile': 1e-6}
-solve_array_power_law('powerlaw_solution.py', function_params_physical, function_concentration, function_halo_age)
-solve_array_tchannel('tchannel_solution.py', function_params_physical, function_concentration, function_halo_age)
+#
+# from pyHalo.Halos.lens_cosmo import LensCosmo
+# lc = LensCosmo()
+# function_params_physical = lc.NFW_params_physical
+# function_concentration = lc.NFW_concentration
+# function_halo_age = lc.cosmo.halo_age
+# kwargs_solver = {'rmin_profile': 1e-6}
+# solve_array_power_law('powerlaw_solution.py', function_params_physical, function_concentration, function_halo_age)
+# solve_array_tchannel('tchannel_solution.py', function_params_physical, function_concentration, function_halo_age)
