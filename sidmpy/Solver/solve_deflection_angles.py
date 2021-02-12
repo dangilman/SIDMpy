@@ -19,4 +19,4 @@ def solve_deflection_angles(nproc=10):
             deflection_angle = deflection(*deflection_args)
             log_deflection_array[i, j, :] = numpy.log10(deflection_angle)
 
-    return log_deflection_array
+    return numpy.round(log_deflection_array, 3)
