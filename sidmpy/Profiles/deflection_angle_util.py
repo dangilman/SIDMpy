@@ -80,9 +80,15 @@ def deflection(Rvalues, rho_function, function_args,
         pool.close()
 
     else:
+
+        a=input('continue')
         defangle = [deflection_point(args_i) for args_i in args]
 
     return np.array(defangle)
+
+def deflection_multiprocessing(args):
+
+    return deflection(*args)
 
 def deflection_from_profile(Rvalues, rho_3D_array, r_evaluate):
     """
