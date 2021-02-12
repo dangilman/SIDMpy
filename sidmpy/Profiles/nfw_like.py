@@ -20,7 +20,7 @@ def coreTNFWprofile(r, rhos, rs, rt, rc, a=10):
 
     x = r / rs
     tau = rt / rs
-    beta = rc/rs
+    beta = rc / rs
 
     truncation_factor = tau ** 2 / (tau ** 2 + x ** 2)
     core_factor = (x ** a + beta ** a) ** (-1/a)
