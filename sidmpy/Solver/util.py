@@ -133,3 +133,30 @@ def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
 
     G = 4.3e-6  # units kpc/M_sun * (km/sec)^2
     return G * integral_new / TNFWprofile(r, rho_s, rs, 1e+6 * rs)
+
+def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section_class, halo_age, rmin_profile, rmax_profile):
+
+    fit_grid = np.ones_like(log_rho_values) * 1e+12
+    fit_grid = fit_grid.ravel()
+    # compute the fit quality for each point in the search space
+    for i, (log_rho_i, velocity_dispersion_i) in enumerate(zip(log_rho_values, vdis_values)):
+        r1 = compute_r1(rhos, rs, velocity_dispersion_i, cross_section_class, halo_age)
+        r_iso, rho_iso = integrate_profile(10 ** log_rho_i,
+                                           velocity_dispersion_i, rs, r1, rmin_fac=rmin_profile,
+                                           rmax_fac=rmax_profile)
+
+        m_enclosed = isothermal_profile_mass(r_iso, rho_iso, r1)
+        rho_at_r1 = isothermal_profile_density(r1, r_iso, rho_iso)
+        m_nfw = nfwprofile_mass(rhos, rs, r1)
+        rho_nfw_at_r1 = TNFWprofile(r1, rhos, rs, 10000000 * rs)
+
+        mass_ratio = m_nfw / m_enclosed
+        density_ratio = rho_nfw_at_r1 / rho_at_r1
+
+        mass_penalty = np.absolute(mass_ratio - 1)
+        den_penalty = np.absolute(density_ratio - 1)
+
+        fit_qual = mass_penalty + den_penalty
+        fit_grid[i] = fit_qual
+
+    return fit_grid

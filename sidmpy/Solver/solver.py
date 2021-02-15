@@ -1,6 +1,5 @@
 import numpy as np
-from sidmpy.Solver.util import nfw_velocity_dispersion, compute_r1, integrate_profile, isothermal_profile_mass, \
-    isothermal_profile_density, nfwprofile_mass, TNFWprofile
+from sidmpy.Solver.util import nfw_velocity_dispersion, compute_r1, compute_rho_sigmav_grid
 
 def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, rmax_profile=2.5,
                   vdis_min_scale=0.3, vdis_max_scale=2., rho_min_scale=0.05, rho_max_scale=10., plot=False, tol=1e-2,
@@ -57,28 +56,9 @@ def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, 
         log_rho_values, vdis_values = np.meshgrid(_x, _y)
         log_rho_values = log_rho_values.ravel()
         vdis_values = vdis_values.ravel()
-        fit_grid = np.ones_like(log_rho_values) * 1e+12
 
-        # compute the fit quality for each point in the search space
-        for i, (log_rho_i, velocity_dispersion_i) in enumerate(zip(log_rho_values, vdis_values)):
-            r1 = compute_r1(rho_s, rs, velocity_dispersion_i, cross_section_class, halo_age)
-            r_iso, rho_iso = integrate_profile(10 ** log_rho_i,
-                                               velocity_dispersion_i, rs, r1, rmin_fac=rmin_profile,
-                                               rmax_fac=rmax_profile)
-
-            m_enclosed = isothermal_profile_mass(r_iso, rho_iso, r1)
-            rho_at_r1 = isothermal_profile_density(r1, r_iso, rho_iso)
-            m_nfw = nfwprofile_mass(rho_s, rs, r1)
-            rho_nfw_at_r1 = TNFWprofile(r1, rho_s, rs, 10000000 * rs)
-
-            mass_ratio = m_nfw / m_enclosed
-            density_ratio = rho_nfw_at_r1 / rho_at_r1
-
-            mass_penalty = np.absolute(mass_ratio - 1)
-            den_penalty = np.absolute(density_ratio - 1)
-
-            fit_qual = mass_penalty + den_penalty
-            fit_grid[i] = fit_qual
+        fit_grid = compute_rho_sigmav_grid(log_rho_values, vdis_values, rho_s, rs, cross_section_class,
+                                           halo_age, rmin_profile, rmax_profile)
 
         idx_best = np.argmin(fit_grid)
         fit_quality_last = fit_grid[idx_best]

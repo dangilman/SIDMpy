@@ -1,6 +1,8 @@
 from scipy.interpolate import RegularGridInterpolator
 import numpy as np
-
+from sidmpy.Solver.solution_interp.tchannel_solution_table import log_rho_w30
+from sidmpy.Solver.solution_interp.power_law_solution_table import log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, \
+    log_rho_vpower06, log_rho_vpower08
 cross_section_normalization = np.array([0.5, 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.])
 redshifts = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
              2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.65]
@@ -8,13 +10,22 @@ mass_values = [6, 6.4, 6.8, 7.2, 7.6, 8.0, 8.4, 8.8, 9.2, 9.6, 10.]
 v_dependence_powerlaw = [0., 0.2, 0.4, 0.6, 0.8]
 
 points_tchannel = (cross_section_normalization, redshifts, mass_values)
-#interp_tchannel = RegularGridInterpolator(points_tchannel, log_rho_w10)
+interp_tchannel = RegularGridInterpolator(points_tchannel, log_rho_w30)
 
 points_power_law = (v_dependence_powerlaw, cross_section_normalization, redshifts, mass_values)
-#values_power_law = np.stack((log_rho_vpower0, log_rho_vpower025, log_rho_vpower05, log_rho_vpower075))
-#interp_powerlaw = RegularGridInterpolator(points_power_law, values_power_law)
+values_power_law = np.stack((log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, log_rho_vpower06,
+                             log_rho_vpower08))
+interp_powerlaw = RegularGridInterpolator(points_power_law, values_power_law)
 
-def logrho_tchannel(log_mass, z, delta_concentration, kwargs_cross_section, concentration_scatter_scale=0.85):
+def concentration_scatter_adjustment(delta_c_in_dex, cross_norm, concentration_scatter_scale, cross_scale):
+
+    cross_section_adjustment = cross_scale * (cross_norm - 1)
+
+    return delta_c_in_dex * concentration_scatter_scale + cross_section_adjustment
+
+
+def logrho_tchannel(log_mass, z, delta_concentration, kwargs_cross_section,
+                    concentration_scatter_scale=0.85, cross_scale=0.025):
 
     norm, v_ref = kwargs_cross_section['norm'], kwargs_cross_section['v_ref']
     if norm < cross_section_normalization[0]:
@@ -25,16 +36,18 @@ def logrho_tchannel(log_mass, z, delta_concentration, kwargs_cross_section, conc
     if log_mass < 6 or log_mass > 10:
         raise Exception('log_mass must be between 6 and 10')
     if v_ref != 30:
-        raise Exception('TCHANNEL solution only computed for a reference velocity w = 10 km/sec')
+        raise Exception('TCHANNEL solution only computed for a reference velocity v_0 = 30 km/sec')
 
     x = (norm, z, log_mass)
-    rho0 = interp_tchannel(x)
+    log10_rho0 = interp_tchannel(x)
+    delta_rho_dex = concentration_scatter_adjustment(delta_concentration, norm, concentration_scatter_scale,
+                                                   cross_scale)
+    log10_rho0 += delta_rho_dex
 
-    rho0 = 10 ** (np.log10(rho0) + delta_concentration * concentration_scatter_scale)
+    return log10_rho0
 
-    return rho0
-
-def logrho_power_law(log_mass, z, delta_concentration, kwargs_cross_section, concentration_scatter_scale=0.85):
+def logrho_power_law(log_mass, z, delta_concentration, kwargs_cross_section, concentration_scatter_scale=1.,
+                     cross_scale=0.02):
     """
 
     Returns the central density of an SIDM halo with an interaction cross section parameterized as:
@@ -71,7 +84,9 @@ def logrho_power_law(log_mass, z, delta_concentration, kwargs_cross_section, con
         raise Exception('log_mass must be between 6 and 10')
 
     x = (v_dep, norm, z, log_mass)
-    rho0 = interp_powerlaw(x)
-    rho0 = 10 ** (np.log10(rho0) + delta_concentration * concentration_scatter_scale)
+    log10_rho0 = interp_powerlaw(x)
+    delta_rho_dex = concentration_scatter_adjustment(delta_concentration, norm, concentration_scatter_scale,
+                                                   cross_scale)
+    log10_rho0 += delta_rho_dex
 
-    return rho0
+    return log10_rho0

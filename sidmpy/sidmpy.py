@@ -9,14 +9,13 @@ def solve_with_interpolation(halo_mass, halo_redshift, delta_concentration_halo,
                              cross_section_type, kwargs_cross_section, kwargs_interp={}):
 
     if cross_section_type == 'POWER_LAW':
-        return logrho_power_law(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
+        return 10 ** logrho_power_law(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
                                 **kwargs_interp)
     elif cross_section_type == 'TCHANNEL':
-        return logrho_tchannel(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
+        return 10 ** logrho_tchannel(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
                                **kwargs_interp)
     else:
         raise Exception('cross section type not recognized')
-
 
 def solve_from_NFW_params(rhos, rs, halo_age, cross_section_type, kwargs_cross_section, **kwargs_solver):
 

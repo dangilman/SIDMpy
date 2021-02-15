@@ -81,7 +81,6 @@ def deflection(Rvalues, rho_function, function_args,
 
     else:
 
-        a=input('continue')
         defangle = [deflection_point(args_i) for args_i in args]
 
     return np.array(defangle)
