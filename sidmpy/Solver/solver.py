@@ -37,7 +37,7 @@ def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, 
     logrhomin, logrhomax = np.log10(rhomin), np.log10(rhomax)
     log_rho_range = np.log10(rhomax) - np.log10(rhomin)
 
-    vdis_init = nfw_velocity_dispersion(rs, rho_s, rs) ** 0.5
+    vdis_init = nfw_velocity_dispersion(rs, rho_s, rs)
     vdismin, vdismax = vdis_init * vdis_min_scale, vdis_init * vdis_max_scale
     vdis_range = vdismax - vdismin
 

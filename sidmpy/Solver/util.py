@@ -101,6 +101,30 @@ def isothermal_profile_density(r, r_iso, rho_iso):
     return rho_iso_interp(r)
 
 
+def nfw_velocity_dispersion_fromfit(m):
+    """
+    The velocity dispersion of an NFW profile with mass m calibrated from a power law fit for halos
+    between 10^6 and 10^10 at z=0
+    :param m: halo mass in M_sun
+    :return: the velocity dispersion inside rs
+    """
+    coeffs = [0.31575757, -1.74259129]
+    log_vrms = coeffs[0] * np.log10(m) + coeffs[1]
+    return 10 ** log_vrms
+
+def nfw_mass_from_velocity_dispersion(vrms):
+
+    """
+    The velocity dispersion of an NFW profile with mass m calibrated from a power law fit for halos
+    between 10^6 and 10^10 at z=0
+    :param m: halo mass in M_sun
+    :return: the velocity dispersion inside rs
+    """
+    coeffs = [0.31575757, -1.74259129]
+    log_vmrs = np.log10(vrms)
+    logm = (log_vmrs - coeffs[1])/coeffs[0]
+    return 10 ** logm
+
 def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     """
 
@@ -132,7 +156,8 @@ def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
             integral = integral_new
 
     G = 4.3e-6  # units kpc/M_sun * (km/sec)^2
-    return G * integral_new / TNFWprofile(r, rho_s, rs, 1e+6 * rs)
+    sigma_v_squared = G * integral_new / TNFWprofile(r, rho_s, rs, 1e+6 * rs)
+    return np.sqrt(sigma_v_squared)
 
 def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section_class, halo_age, rmin_profile, rmax_profile):
 
