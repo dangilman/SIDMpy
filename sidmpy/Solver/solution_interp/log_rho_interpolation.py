@@ -1,21 +1,29 @@
 from scipy.interpolate import RegularGridInterpolator
 import numpy as np
-from sidmpy.Solver.solution_interp.tchannel_solution_table import log_rho_w30
-from sidmpy.Solver.solution_interp.power_law_solution_table import log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, \
-    log_rho_vpower06, log_rho_vpower08
-cross_section_normalization = np.array([0.5, 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.])
-redshifts = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
+# from sidmpy.Solver.solution_interp.tchannel_solution_table import log_rho_w30
+# from sidmpy.Solver.solution_interp.power_law_solution_table import log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, \
+#     log_rho_vpower06, log_rho_vpower08
+
+cross_section_normalization_tchannel = np.array([0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.,
+                                        8.5, 9., 9.5, 10.])
+redshifts_tchannel = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
              2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.65]
-mass_values = [6, 6.4, 6.8, 7.2, 7.6, 8.0, 8.4, 8.8, 9.2, 9.6, 10.]
+v_dependence_tchannel = [10, 15, 20, 25, 30, 35, 40]
+mass_values_tchannel = np.arange(6, 10.25, 0.25)
+
 v_dependence_powerlaw = [0., 0.2, 0.4, 0.6, 0.8]
+cross_section_normalization_powerlaw = np.array([0.5, 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.])
+redshifts_powerlaw = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
+             2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.65]
+mass_values_powerlaw = [6, 6.4, 6.8, 7.2, 7.6, 8.0, 8.4, 8.8, 9.2, 9.6, 10.]
 
-points_tchannel = (cross_section_normalization, redshifts, mass_values)
-interp_tchannel = RegularGridInterpolator(points_tchannel, log_rho_w30)
+points_tchannel = (v_dependence_tchannel, cross_section_normalization_tchannel, redshifts_tchannel, mass_values_tchannel)
+#interp_tchannel = RegularGridInterpolator(points_tchannel, log_rho_w30)
 
-points_power_law = (v_dependence_powerlaw, cross_section_normalization, redshifts, mass_values)
-values_power_law = np.stack((log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, log_rho_vpower06,
-                             log_rho_vpower08))
-interp_powerlaw = RegularGridInterpolator(points_power_law, values_power_law)
+points_power_law = (v_dependence_powerlaw, cross_section_normalization_powerlaw, redshifts_powerlaw, mass_values_powerlaw)
+#values_power_law = np.stack((log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, log_rho_vpower06,
+#                             log_rho_vpower08))
+#interp_powerlaw = RegularGridInterpolator(points_power_law, values_power_law)
 
 def concentration_scatter_adjustment(delta_c_in_dex, cross_norm, concentration_scatter_scale, cross_scale):
 

@@ -14,4 +14,3 @@ class VelocityIndependentCrossSection(InteractionCrossSection):
     def _velocity_dependence_kernel(self, v):
 
         return 1.
-

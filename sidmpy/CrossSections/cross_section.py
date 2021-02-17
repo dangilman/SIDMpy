@@ -34,7 +34,7 @@ class InteractionCrossSection(object):
         \int_{0}^{infinity} K(v) * v * sigma(v) dv
 
         K(v) is the Maxwell Boltzmann kernel: 4 * pi * v^2 * exp(-v^2 / v_p^2), and v_p is most probable speed, and
-        v_rms is the velocity dispersion (or the r.m.s. speed). in general v_mp^2 = 2/3 v_rms^2
+        v_rms is the velocity dispersion (or the r.m.s. speed). v_mp^2 = 2/3 v_rms^2
 
         :param v_rms: the RMS speed (velocity dispersion) of the halo
         :return: the velocity-weighted cross section in units km/sec * cm^2/gram
@@ -54,3 +54,5 @@ class InteractionCrossSection(object):
         kernel = 4 * np.pi * v ** (2 + n) * np.exp(-x ** 2)
         norm = (np.pi * v0 ** 2) ** -1.5
         return norm * kernel * func(v)
+
+

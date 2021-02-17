@@ -1,5 +1,5 @@
 from sidmpy.Solver.solver import solve_profile
-from sidmpy.Solver.solution_interp.log_rho_interpolation import cross_section_normalization, redshifts, mass_values, v_dependence_powerlaw
+from sidmpy.Solver.solution_interp.log_rho_interpolation import *
 from sidmpy.CrossSections.power_law import PowerLaw
 from sidmpy.CrossSections.tchannel import TChannel
 from multiprocessing.pool import Pool
@@ -23,14 +23,15 @@ def single_solve(args):
 def solve_array_power_law(filename_out, function_params_physical, function_concentration,
                  function_halo_age, kwargs_solver={}, nproc=10):
 
-    dim1, dim2, dim3, dim4 = len(cross_section_normalization), len(redshifts), len(mass_values), len(v_dependence_powerlaw)
+    dim1, dim2, dim3, dim4 = len(cross_section_normalization_powerlaw), len(redshifts_powerlaw), len(mass_values_powerlaw), \
+                             len(v_dependence_powerlaw)
     print('ntotal: ', dim1 * dim2 * dim3 * dim4)
 
     for v_dep in v_dependence_powerlaw:
         args = []
-        for cross_norm in cross_section_normalization:
-            for zi in redshifts:
-                for mi in mass_values:
+        for cross_norm in cross_section_normalization_powerlaw:
+            for zi in redshifts_powerlaw:
+                for mi in mass_values_powerlaw:
                     kwargs_cross = {'norm': cross_norm, 'v_dep': v_dep, 'v_ref': 30.}
                     cross_section = PowerLaw(**kwargs_cross)
                     new = (10**mi, zi, cross_section, function_params_physical, function_concentration,
@@ -42,7 +43,7 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
         pool.close()
         result_array = numpy.array(result).reshape(dim1, dim2, dim3)
         result_array = numpy.log10(result_array)
-        result_array = numpy.round(result_array, 3)
+        result_array = numpy.round(result_array, 4)
         with open(filename_out, 'a') as f:
             f.write('log_rho_vpower'+str(v_dep) +' = np.')
             f.write(str(repr(result_array))+ '\n\n')
@@ -50,27 +51,29 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
                  function_halo_age, kwargs_solver={}, nproc=10):
 
-    dim1, dim2, dim3 = len(cross_section_normalization), len(redshifts), len(mass_values)
+    dim1, dim2, dim3 = len(cross_section_normalization_tchannel), len(redshifts_tchannel), len(mass_values_tchannel)
     print('ntotal: ', dim1 * dim2 * dim3)
-    args = []
-    for cross_norm in cross_section_normalization:
-        for zi in redshifts:
-            for mi in mass_values:
-                kwargs_cross = {'norm': cross_norm, 'v_ref': 30.}
-                cross_section = TChannel(**kwargs_cross)
-                new = (10**mi, zi, cross_section, function_params_physical, function_concentration,
-                                          function_halo_age, kwargs_solver)
-                args.append(new)
 
-    pool = Pool(nproc)
-    result = pool.map(single_solve, args)
-    pool.close()
-    result_array = numpy.array(result).reshape(dim1, dim2, dim3)
-    result_array = numpy.log10(result_array)
-    result_array = numpy.round(result_array, 3)
-    with open(filename_out, 'a') as f:
-        f.write('log_rho_w30 = np.')
-        f.write(str(repr(result_array))+ '\n\n')
+    for v_dep in v_dependence_tchannel:
+        args = []
+        for cross_norm in cross_section_normalization_tchannel:
+            for zi in redshifts_tchannel:
+                for mi in mass_values_tchannel:
+                    kwargs_cross = {'norm': cross_norm, 'v_ref': v_dep}
+                    cross_section = TChannel(**kwargs_cross)
+                    new = (10**mi, zi, cross_section, function_params_physical, function_concentration,
+                                              function_halo_age, kwargs_solver)
+                    args.append(new)
+
+        pool = Pool(nproc)
+        result = pool.map(single_solve, args)
+        pool.close()
+        result_array = numpy.array(result).reshape(dim1, dim2, dim3)
+        result_array = numpy.log10(result_array)
+        result_array = numpy.round(result_array, 4)
+        with open(filename_out, 'a') as f:
+            f.write('log_rho_w'+str(v_dep)+' = np.')
+            f.write(str(repr(result_array))+ '\n\n')
 #
 # from pyHalo.Halos.lens_cosmo import LensCosmo
 # lc = LensCosmo()
