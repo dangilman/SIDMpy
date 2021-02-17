@@ -55,7 +55,7 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
     dim4 = len(v_dependence_tchannel)
     print('ntotal: ', dim1 * dim2 * dim3 * dim4)
 
-    for v_dep in v_dependence_tchannel[i_start]:
+    for v_dep in v_dependence_tchannel[i_start:]:
         args = []
         for cross_norm in cross_section_normalization_tchannel:
             for zi in redshifts_tchannel:
