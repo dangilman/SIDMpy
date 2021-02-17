@@ -1,6 +1,6 @@
 import numpy as np
 
-def evolution_timescale(rho_s, rs, velocity_averaged_cross_section):
+def evolution_timescale(rho_s, rs, momentum_averaged_cross_section):
 
     """
     Evaluates the timescale for the evolution of SIDM profiles using the expression t_0^{-1} = ...
@@ -17,7 +17,8 @@ def evolution_timescale(rho_s, rs, velocity_averaged_cross_section):
 
     :param rho_s: the central density normalization of the collisionless NFW profile of the same mass
     :param rs: the scale radius of the collisionless NFW profile of the same mass
-    :param velocity_averaged_cross_section: the velocity-averaged scattering cross section in cm^2/gram
+    :param momentum_exchange_cross_section: the scattering cross section in cm^2/gram weighted by v^2:
+    <sigma(v) v^2> / <v^2>
     :param scattering_velocity: the velocity at which to evaluate the possibly velocity-dependent cross section; for
     a velocity independent cross section this is redundant
     :return: the time in Gyr from the collapse time of a halo until when it should start to core collapse
@@ -27,5 +28,5 @@ def evolution_timescale(rho_s, rs, velocity_averaged_cross_section):
     a = 4/np.sqrt(np.pi)
     v0 = np.sqrt(4 * np.pi * G * rho_s * rs ** 2)
     const = 2.136e-19  # to year^{-1}
-    t_inverse = a * const * v0 * rho_s * velocity_averaged_cross_section
+    t_inverse = a * const * v0 * rho_s * momentum_averaged_cross_section
     return 1e-9 / t_inverse

@@ -21,13 +21,13 @@ def single_solve(args):
     return rho0
 
 def solve_array_power_law(filename_out, function_params_physical, function_concentration,
-                 function_halo_age, kwargs_solver={}, nproc=10):
+                 function_halo_age, kwargs_solver={}, nproc=10, i_start=0):
 
     dim1, dim2, dim3, dim4 = len(cross_section_normalization_powerlaw), len(redshifts_powerlaw), len(mass_values_powerlaw), \
                              len(v_dependence_powerlaw)
     print('ntotal: ', dim1 * dim2 * dim3 * dim4)
 
-    for v_dep in v_dependence_powerlaw:
+    for v_dep in v_dependence_powerlaw[i_start:]:
         args = []
         for cross_norm in cross_section_normalization_powerlaw:
             for zi in redshifts_powerlaw:
@@ -49,13 +49,13 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
             f.write(str(repr(result_array))+ '\n\n')
 
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
-                 function_halo_age, kwargs_solver={}, nproc=10):
+                 function_halo_age, kwargs_solver={}, nproc=10, i_start=0):
 
     dim1, dim2, dim3 = len(cross_section_normalization_tchannel), len(redshifts_tchannel), len(mass_values_tchannel)
     dim4 = len(v_dependence_tchannel)
     print('ntotal: ', dim1 * dim2 * dim3 * dim4)
 
-    for v_dep in v_dependence_tchannel:
+    for v_dep in v_dependence_tchannel[i_start]:
         args = []
         for cross_norm in cross_section_normalization_tchannel:
             for zi in redshifts_tchannel:

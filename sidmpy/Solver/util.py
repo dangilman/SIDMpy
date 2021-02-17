@@ -16,7 +16,7 @@ def compute_r1(rhos, rs, vdispersion_halo, cross_section_class, halo_age):
     rho_nfw(r_1) * <sigma * v> * t_halo = 1
     """
     # units cm^2 / gram * km/sec
-    cm2_per_gram_times_sigmav = cross_section_class.maxwell_boltzmann_average(vdispersion_halo)
+    cm2_per_gram_times_sigmav = cross_section_class.scattering_rate_cross_section(vdispersion_halo)
 
     # cm^2 * solar masses * km / (kpc^3 * gram * sec) to 1/Gyr
     const = 2.1358e-10
