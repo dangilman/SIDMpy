@@ -1,5 +1,5 @@
 from scipy.integrate import solve_ivp, quad
-from sidmpy.Profiles.nfw_like import TNFWprofile
+from sidmpy.Profiles.halo_density_profiles import TNFWprofile
 from scipy.interpolate import interp1d
 import numpy as np
 

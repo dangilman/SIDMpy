@@ -1,6 +1,6 @@
 from sidmpy.sidmpy import solve_from_NFW_params
 from sidmpy.Solver.util import integrate_profile
-from sidmpy.Profiles.nfw_like import TNFWprofile
+from sidmpy.Profiles.halo_density_profiles import TNFWprofile
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 import numpy as np
