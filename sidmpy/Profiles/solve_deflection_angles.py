@@ -1,10 +1,10 @@
 import numpy
 import sys
 from sidmpy.Profiles.deflection_angle_util import deflection
-from sidmpy.Profiles.nfw_like import coreTNFWprofile
+from sidmpy.Profiles.halo_density_profiles import coreTNFWprofile
 
 numpy.set_printoptions(threshold=sys.maxsize)
-x = numpy.logspace(-3, 2, 50)
+x = numpy.logspace(-3, 2, 100)
 tau_values = numpy.arange(1, 31, 1)
 beta_values = numpy.arange(0.0025, 1.005, 0.005)
 

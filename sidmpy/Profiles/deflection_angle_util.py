@@ -33,7 +33,7 @@ def projected_mass(R2D, rho_function, function_args):
     :param function_args:
     :return:
     """
-    return quad(integrand_mproj, 0, 500, args=(R2D, rho_function, function_args))[0]
+    return quad(integrand_mproj, 0, 1000, args=(R2D, rho_function, function_args))[0]
 
 def deflection_point(args):
     """

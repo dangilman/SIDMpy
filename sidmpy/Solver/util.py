@@ -100,7 +100,6 @@ def isothermal_profile_density(r, r_iso, rho_iso):
                               fill_value=(rho_iso[0], 0.), bounds_error=False)
     return rho_iso_interp(r)
 
-
 def nfw_velocity_dispersion_fromfit(m):
     """
     The velocity dispersion of an NFW profile with mass m calibrated from a power law fit for halos
@@ -124,6 +123,14 @@ def nfw_mass_from_velocity_dispersion(vrms):
     log_vmrs = np.log10(vrms)
     logm = (log_vmrs - coeffs[1])/coeffs[0]
     return 10 ** logm
+
+def nfw_circular_velocity(r, rhos, rs):
+
+    G = 4.3e-6
+    x = r/rs
+    fx = np.log(1+x) -x/(1+x)
+    m = 4 * np.pi * rs ** 3 * rhos * fx
+    return np.sqrt(G * m / r)
 
 def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     """

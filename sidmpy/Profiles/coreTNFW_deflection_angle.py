@@ -108,7 +108,6 @@ class CoreTNFWDeflection(object):
         """
 
         R = np.sqrt(x ** 2 + y ** 2)
-
         beta = r_core/Rs
         tau = r_trunc/Rs
 

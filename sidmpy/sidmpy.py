@@ -2,18 +2,16 @@ from sidmpy.CrossSections.power_law import PowerLaw
 from sidmpy.CrossSections.velocity_independent import VelocityIndependentCrossSection
 from sidmpy.CrossSections.tchannel import TChannel
 from sidmpy.Solver.solver import solve_profile
-from sidmpy.Solver.solution_interp.log_rho_interpolation import logrho_power_law, logrho_tchannel
+from sidmpy.Solver.solution_interp.log_rho_interpolation import logrho_tchannel
 import numpy as np
 
-def solve_with_interpolation(halo_mass, halo_redshift, delta_concentration_halo,
-                             cross_section_type, kwargs_cross_section, kwargs_interp={}):
+def solve_with_interpolation(halo_mass, halo_redshift, delta_c_over_c, cross_section_type, kwargs_cross_section):
 
     if cross_section_type == 'POWER_LAW':
-        return 10 ** logrho_power_law(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
-                                **kwargs_interp)
+        raise Exception('net yet implemented')
+
     elif cross_section_type == 'TCHANNEL':
-        return 10 ** logrho_tchannel(np.log10(halo_mass), halo_redshift, delta_concentration_halo, kwargs_cross_section,
-                               **kwargs_interp)
+        return 10 ** logrho_tchannel(np.log10(halo_mass), halo_redshift, kwargs_cross_section, delta_c_over_c)
     else:
         raise Exception('cross section type not recognized')
 
@@ -46,7 +44,7 @@ def solve_from_Mz(M, z, cross_section_type, kwargs_cross_section, z_collapse=10.
         from pyHalo.Halos.lens_cosmo import LensCosmo
         from pyHalo.Cosmology.cosmology import Cosmology
         cosmo = Cosmology()
-        lens_cosmo = LensCosmo(0.5, 1.5, cosmo)
+        lens_cosmo = LensCosmo()
     except:
         raise Exception('error importing pyHalo, which is needed to use this routine')
 
