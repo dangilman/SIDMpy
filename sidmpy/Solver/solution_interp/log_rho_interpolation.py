@@ -4,10 +4,10 @@ from sidmpy.Solver.solution_interp.tchannel_solution_table import *
 # from sidmpy.Solver.solution_interp.power_law_solution_table import log_rho_vpower0, log_rho_vpower02, log_rho_vpower04, \
 #     log_rho_vpower06, log_rho_vpower08
 
-cross_section_normalization_tchannel = np.arange(1, 36, 1)
+cross_section_normalization_tchannel = np.arange(1, 51, 1)
 redshifts_tchannel = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
              2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.65]
-v_dependence_tchannel = np.append(np.arange(10, 52, 2), 100)
+v_dependence_tchannel = np.append(np.append(np.arange(10, 52, 2), 100), 100)
 mass_values_tchannel = np.arange(6, 10.25, 0.25)
 
 v_dependence_powerlaw = [0., 0.2, 0.4, 0.6, 0.8]

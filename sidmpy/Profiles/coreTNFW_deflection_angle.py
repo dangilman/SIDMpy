@@ -25,7 +25,7 @@ class CoreTNFWDeflection(object):
         self.tau = np.arange(1, 31, 1)
         self.beta = np.arange(0.0025, 1.005, 0.005)
 
-        log_xnfw = np.log10(np.logspace(-3, 2, 50))
+        log_xnfw = np.log10(np.logspace(-3, 2, 100))
 
         self.split = []
 
@@ -147,8 +147,11 @@ class CoreTNFWDeflection(object):
             high_inds = np.where(log_x >= self.log_xmax)
             valid_inds = np.where(np.logical_and(log_x > self.log_xmin, log_x < self.log_xmax))[0]
 
-            alpha[valid_inds] = 10 ** (func(log_x[valid_inds]))
-            alpha_join = self._tnfw_def(10 ** self.log_xmax, tau)
-            alpha[high_inds] = 10 ** (self._tnfw_def(10 ** log_x[high_inds], tau) * func(self.log_xmax) / alpha_join)
+            alpha[valid_inds] = 10 ** func(log_x[valid_inds])
+
+            alpha_interp_at_xmax = 10 ** func(self.log_xmax)
+            alpha_nfw_at_xmax = self._tnfw_def(10**self.log_xmax, tau)
+            rescale = alpha_nfw_at_xmax/alpha_interp_at_xmax
+            alpha[high_inds] = rescale * self._tnfw_def(10**log_x[high_inds], tau)
 
         return norm * alpha

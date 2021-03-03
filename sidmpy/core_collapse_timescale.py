@@ -59,7 +59,7 @@ def evolution_timescale_momentum_transfer(rhos, rs, v_rms, cross_section, rescal
     time_Gyr = time.to(au.Gyr)
     return rescale * time_Gyr.value
 
-def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=0.0425):
+def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.):
     """
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
     average instead of the momentum average, i.e. <sigma v>/<v> instead of <sigma v^2>/<v^2>
@@ -74,7 +74,7 @@ def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=0.0
     rho_s *= au.solMass / au.kpc ** 3
     scattering_rate_cross_section *= au.cm ** 2 / au.g * au.km / au.s
 
-    rate = rho_s * scattering_rate_cross_section
+    rate = 3 * rho_s * scattering_rate_cross_section
     time = 1 / rate
     time_Gyr = time.to(au.Gyr)
     return rescale * time_Gyr.value

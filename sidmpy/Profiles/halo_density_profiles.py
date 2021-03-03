@@ -40,6 +40,15 @@ def NFW_params_physical(M, c, z, astropy, density_threshold=200):
 
     return rho0_msun_mpc3 * 1000 ** -3, Rs_mpc * 1000
 
+def rho0_spl_rho0fromM(xmatch, rs, rhos, x_core=0.05, gamma=3):
+
+    fx = np.log(1 + xmatch) - xmatch/(1+xmatch)
+    m_nfw = 4 * np.pi * rs ** 3 * rhos * fx
+    profile_args = (1., x_core *rs, gamma)
+    m_spl = total_mass(xmatch * rs, rho_spl, profile_args)
+    rho0 = m_nfw/m_spl
+    return rho0
+
 def rho_spl(r, rho0, r_core, gamma):
 
     return rho0 * r_core ** gamma / (r_core ** 2 + r ** 2) ** (gamma/2)
