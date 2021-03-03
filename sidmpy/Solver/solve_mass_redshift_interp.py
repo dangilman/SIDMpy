@@ -57,7 +57,7 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
 
     if v_power_list is None:
         v_power_list = v_dependence_tchannel
-    
+
     for v_dep in v_power_list[i_start:i_end]:
         args = []
         for cross_norm in cross_section_normalization_tchannel:
