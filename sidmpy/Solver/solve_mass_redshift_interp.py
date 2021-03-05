@@ -18,7 +18,7 @@ def single_solve(args):
         rho0, sigma, r1 = solve_profile(rhos, rs, cross_section_class, halo_age, **kwargs_solver)
     except:
         rho0 = numpy.nan
-    return rho0
+    return (rho0, sigma)
 
 def solve_array_power_law(filename_out, function_params_physical, function_concentration,
                  function_halo_age, kwargs_solver={}, nproc=10, i_start=0, i_end=-1):
@@ -41,12 +41,21 @@ def solve_array_power_law(filename_out, function_params_physical, function_conce
         pool = Pool(nproc)
         result = pool.map(single_solve, args)
         pool.close()
-        result_array = numpy.array(result).reshape(dim1, dim2, dim3)
-        result_array = numpy.log10(result_array)
-        result_array = numpy.round(result_array, 4)
+        log10rho0_result, sigma_v_result = [], []
+        for res in result:
+            log10rho0_result.append(np.log10(res[0]))
+            sigma_v_result.append(res[1])
+        result_array_rho0 = numpy.array(log10rho0_result).reshape(dim1, dim2, dim3)
+        result_array_sigmav = numpy.array(sigma_v_result).reshape(dim1, dim2, dim3)
+        result_array_rho0 = numpy.round(result_array_rho0, 3)
+        result_array_sigmav = numpy.round(result_array_sigmav, 3)
+
         with open(filename_out, 'a') as f:
             f.write('log_rho_vpower'+str(v_dep) +' = np.')
-            f.write(str(repr(result_array))+ '\n\n')
+            f.write(str(repr(result_array_rho0))+ '\n\n')
+        with open(filename_out, 'a') as f:
+            f.write('sigmav_vpower'+str(v_dep) +' = np.')
+            f.write(str(repr(result_array_sigmav))+ '\n\n')
 
 def solve_array_tchannel(filename_out, function_params_physical, function_concentration,
                  function_halo_age, kwargs_solver={}, nproc=10, v_power_list=None, i_start=0, i_end=-1):
@@ -72,12 +81,21 @@ def solve_array_tchannel(filename_out, function_params_physical, function_concen
         pool = Pool(nproc)
         result = pool.map(single_solve, args)
         pool.close()
-        result_array = numpy.array(result).reshape(dim1, dim2, dim3)
-        result_array = numpy.log10(result_array)
-        result_array = numpy.round(result_array, 4)
+        log10rho0_result, sigma_v_result = [], []
+        for res in result:
+            log10rho0_result.append(np.log10(res[0]))
+            sigma_v_result.append(res[1])
+        result_array_rho0 = numpy.array(log10rho0_result).reshape(dim1, dim2, dim3)
+        result_array_sigmav = numpy.array(sigma_v_result).reshape(dim1, dim2, dim3)
+        result_array_rho0 = numpy.round(result_array_rho0, 3)
+        result_array_sigmav = numpy.round(result_array_sigmav, 3)
+
         with open(filename_out, 'a') as f:
-            f.write('log_rho_w'+str(v_dep)+' = np.')
-            f.write(str(repr(result_array))+ '\n\n')
+            f.write('log_rho_vpower' + str(v_dep) + ' = np.')
+            f.write(str(repr(result_array_rho0)) + '\n\n')
+        with open(filename_out, 'a') as f:
+            f.write('sigmav_vpower' + str(v_dep) + ' = np.')
+            f.write(str(repr(result_array_sigmav)) + '\n\n')
 
 # from pyHalo.Halos.lens_cosmo import LensCosmo
 # lc = LensCosmo()

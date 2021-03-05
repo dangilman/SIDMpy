@@ -2,8 +2,8 @@ import numpy as np
 from sidmpy.Solver.util import nfw_velocity_dispersion, compute_r1, compute_rho_sigmav_grid
 
 def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, rmax_profile=2.5,
-                  vdis_min_scale=0.3, vdis_max_scale=2., rho_min_scale=0.05, rho_max_scale=10., plot=False, tol=1e-2,
-                  solver_resolution=10, n_iter_max=12):
+                  vdis_min_scale=0.3, vdis_max_scale=2., rho_min_scale=0.04, rho_max_scale=10., plot=False, tol=1e-2,
+                  solver_resolution=12, n_iter_max=12):
 
     """
     This function finds a solution to system of equations:
@@ -46,9 +46,9 @@ def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, 
     while True:
 
         if n_iter > 1:
-            log_rho_range *= 0.75
-            vdis_range *= 0.75
-            solver_resolution *= 1.25
+            log_rho_range *= 0.6
+            vdis_range *= 0.6
+            solver_resolution *= 1.3
             solver_resolution = min(20, int(solver_resolution))
 
         _x = np.linspace(logrhomin, logrhomax, solver_resolution)

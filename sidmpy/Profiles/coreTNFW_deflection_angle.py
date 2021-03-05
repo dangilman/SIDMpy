@@ -107,7 +107,6 @@ class CoreTNFWDeflection(object):
         :return: The deflection angle at R = np.sqrt(x^2 + y^2)
         """
 
-        R = np.sqrt(x ** 2 + y ** 2)
         beta = r_core/Rs
         tau = r_trunc/Rs
 
@@ -115,43 +114,51 @@ class CoreTNFWDeflection(object):
         index_2 = np.argmin(np.absolute(tau - self.tau))
 
         func = self._interp_list[index_1][index_2]
-
-        x_nfw = R/Rs
+        R = np.sqrt(x ** 2 + y ** 2)
 
         if isinstance(R, float) or isinstance(R, int):
 
-            x_nfw = max(1e-6, x_nfw)
+            if R == 0:
+                return 0., 0.
+
+            xmin = 10 ** self.log_xmin
+            R = max(xmin * Rs, R)
+            x_nfw = R / Rs
             log_x = np.log10(x_nfw)
 
             if log_x < self.log_xmin:
 
-                alpha = 0.
+                alpha_radial = 0.
 
             elif log_x < self.log_xmax:
 
-                alpha = 10 ** func(log_x)
+                alpha_radial = 10 ** func(log_x)
 
             else:
 
-                alpha_nfw = self._tnfw_def(10 ** log_x, tau)
-                alpha_interp = func(self.log_xmax)
-                alpha_join = self._tnfw_def(10 ** self.log_xmax, tau)
-                alpha = 10 ** (alpha_nfw * (alpha_interp / alpha_join))
+                alpha_interp_at_xmax = 10 ** func(self.log_xmax)
+                alpha_nfw_at_xmax = self._tnfw_def(10 ** self.log_xmax, tau)
+                rescale = alpha_nfw_at_xmax / alpha_interp_at_xmax
+                alpha_radial = rescale * self._tnfw_def(10 ** log_x, tau)
 
         else:
 
-            x_nfw[np.where(x_nfw < 1e-6)] = 1e-6
+            xmin = 10 ** self.log_xmin
+            R[np.where(R < xmin * Rs)] = xmin * Rs
+            x_nfw = R / Rs
             log_x = np.log10(x_nfw)
 
-            alpha = np.zeros_like(R)
+            alpha_radial = np.zeros_like(R)
             high_inds = np.where(log_x >= self.log_xmax)
             valid_inds = np.where(np.logical_and(log_x > self.log_xmin, log_x < self.log_xmax))[0]
 
-            alpha[valid_inds] = 10 ** func(log_x[valid_inds])
+            alpha_radial[valid_inds] = 10 ** func(log_x[valid_inds])
 
             alpha_interp_at_xmax = 10 ** func(self.log_xmax)
             alpha_nfw_at_xmax = self._tnfw_def(10**self.log_xmax, tau)
             rescale = alpha_nfw_at_xmax/alpha_interp_at_xmax
-            alpha[high_inds] = rescale * self._tnfw_def(10**log_x[high_inds], tau)
+            alpha_radial[high_inds] = rescale * self._tnfw_def(10**log_x[high_inds], tau)
 
-        return norm * alpha
+        alpha_x = norm * alpha_radial * x/R
+        alpha_y = norm * alpha_radial * y/R
+        return alpha_x, alpha_y
