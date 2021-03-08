@@ -14,6 +14,13 @@ class TChannel(InteractionCrossSection):
         self._vref = v_ref
         super(TChannel, self).__init__(norm, self._velocity_dependence_kernel)
 
+    @property
+    def kwargs(self):
+        """
+        Returns the keyword arguments for this cross section model
+        """
+        return {'norm': self.norm, 'v_ref': self._vref}
+
     def _velocity_dependence_kernel(self, v):
 
         r = v / self._vref

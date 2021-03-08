@@ -2,16 +2,29 @@ from sidmpy.CrossSections.power_law import PowerLaw
 from sidmpy.CrossSections.velocity_independent import VelocityIndependentCrossSection
 from sidmpy.CrossSections.tchannel import TChannel
 from sidmpy.Solver.solver import solve_profile
-from sidmpy.Solver.solution_interp.log_rho_interpolation import logrho_tchannel
+from sidmpy.Solver.solution_interp.log_rho_interpolation import logrho_tchannel, velocity_dispersion_tchannel
 import numpy as np
 
-def solve_with_interpolation(halo_mass, halo_redshift, delta_c_over_c, cross_section_type, kwargs_cross_section):
+def solve_rho_with_interpolation(halo_mass, halo_redshift, delta_c_over_c, cross_section_type,
+                                 kwargs_cross_section, apply_delta_c_correction=True):
 
     if cross_section_type == 'POWER_LAW':
         raise Exception('net yet implemented')
 
     elif cross_section_type == 'TCHANNEL':
-        return 10 ** logrho_tchannel(np.log10(halo_mass), halo_redshift, kwargs_cross_section, delta_c_over_c)
+        return 10 ** logrho_tchannel(np.log10(halo_mass), halo_redshift, kwargs_cross_section, delta_c_over_c,
+                                     apply_delta_c_correction)
+    else:
+        raise Exception('cross section type not recognized')
+
+def solve_sigmav_with_interpolation(halo_mass, halo_redshift, delta_c_over_c, cross_section_type,
+                                    kwargs_cross_section, apply_delta_c_correction=True):
+
+    if cross_section_type == 'POWER_LAW':
+        raise Exception('net yet implemented')
+    elif cross_section_type == 'TCHANNEL':
+        return velocity_dispersion_tchannel(np.log10(halo_mass), halo_redshift, kwargs_cross_section, delta_c_over_c,
+                                            apply_delta_c_correction)
     else:
         raise Exception('cross section type not recognized')
 
@@ -49,7 +62,7 @@ def solve_from_Mz(M, z, cross_section_type, kwargs_cross_section, z_collapse=10.
         raise Exception('error importing pyHalo, which is needed to use this routine')
 
     c = lens_cosmo.NFW_concentration(M, z, scatter=include_c_scatter)
-    if include_c_scatter is False and c_scatter_add_dex > 0:
+    if include_c_scatter is False and c_scatter_add_dex != 0:
         c = 10 ** (np.log10(c) + c_scatter_add_dex)
 
     rhos, rs, _ = lens_cosmo.NFW_params_physical(M, c, z)
