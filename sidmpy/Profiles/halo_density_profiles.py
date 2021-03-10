@@ -49,6 +49,14 @@ def rho0_spl_rho0fromM(xmatch, rs, rhos, x_core=0.05, gamma=3):
     rho0 = m_nfw/m_spl
     return rho0
 
+def circular_velocity(r, density_profile, args_profile):
+    G_units_kpc = 4.3e-6
+    if isinstance(r, list) or isinstance(r, np.ndarray):
+        v_circ_squared = np.array([total_mass(ri, density_profile, args_profile)/ri for ri in r])
+    else:
+        v_circ_squared = total_mass(r, density_profile, args_profile) / r
+    return np.sqrt(G_units_kpc * v_circ_squared)
+
 def rho_spl(r, rho0, r_core, gamma):
 
     return rho0 * r_core ** gamma / (r_core ** 2 + r ** 2) ** (gamma/2)
