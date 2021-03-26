@@ -2,6 +2,7 @@ from scipy.integrate import solve_ivp, quad
 from sidmpy.Profiles.halo_density_profiles import TNFWprofile
 from scipy.interpolate import interp1d
 import numpy as np
+from scipy.optimize import fsolve
 
 def compute_r1(rhos, rs, vdispersion_halo, cross_section_class, halo_age):
 
@@ -27,6 +28,22 @@ def compute_r1(rhos, rs, vdispersion_halo, cross_section_class, halo_age):
     lam = np.real(np.max(roots[np.where(np.isreal(roots))]))
 
     return lam * rs
+
+def compute_r1_nfw_velocity_dispersion(rhos, rs, cross_section_class, halo_age):
+
+    # cm^2 * solar masses * km / (kpc^3 * gram * sec) to 1/Gyr
+    const = 2.1358e-10
+
+    def _func_to_min(r):
+        r = r[0]
+        vdispersion_halo = nfw_velocity_dispersion_analytic(r, rhos, rs)
+        cm2_per_gram_times_sigmav = cross_section_class.scattering_rate_cross_section(vdispersion_halo)
+        func = const * TNFWprofile(r, rhos, rs, 100000 * rs) * cm2_per_gram_times_sigmav * halo_age - 1
+        return func
+
+    out = fsolve(_func_to_min, rs)
+
+    return out[0]
 
 def ode_system(x, f):
     """
@@ -143,7 +160,7 @@ def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     def _integrand(rprime):
         return TNFWprofile(rprime, rho_s, rs, 1000000000 * rs) * nfwprofile_mass(rho_s, rs, rprime) / rprime ** 2
 
-    rmax_scale = 10.
+    rmax_scale = 2.
     rmax = rmax_scale * rs
     integral = quad(_integrand, r, rmax)[0]
     count_max = 5.
@@ -166,13 +183,35 @@ def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     sigma_v_squared = G * integral_new / TNFWprofile(r, rho_s, rs, 1e+6 * rs)
     return np.sqrt(sigma_v_squared)
 
-def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section_class, halo_age, rmin_profile, rmax_profile):
+def Li(x):
+    integrand = lambda u: np.log(1 - u) / u
+    return quad(integrand, x, 0)[0]
+
+def nfw_velocity_dispersion_analytic(r, rhos, rs):
+
+    G = 4.3e-6
+    x = r / rs
+    factor = 0.5 * x * (1 + x) ** 2 * G * 4 * np.pi * rhos * rs ** 2
+
+    term = np.pi ** 2 - np.log(x) - 1 / x - 1 / (1 + x) ** 2 - 6 / (1 + x) + \
+           (1 + 1 / x ** 2 - 4 / x - 2 / (1 + x)) * np.log(1 + x) + 3 * np.log(1 + x) ** 2 + 6 * Li(-x)
+
+    return np.sqrt(factor * term)
+
+def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section_class,
+                            halo_age, rmin_profile, rmax_profile, use_nfw_velocity_dispersion):
 
     fit_grid = np.ones_like(log_rho_values) * 1e+12
     fit_grid = fit_grid.ravel()
     # compute the fit quality for each point in the search space
+
     for i, (log_rho_i, velocity_dispersion_i) in enumerate(zip(log_rho_values, vdis_values)):
-        r1 = compute_r1(rhos, rs, velocity_dispersion_i, cross_section_class, halo_age)
+
+        if use_nfw_velocity_dispersion:
+            r1 = compute_r1_nfw_velocity_dispersion(rhos, rs, cross_section_class, halo_age)
+        else:
+            r1 = compute_r1(rhos, rs, velocity_dispersion_i, cross_section_class, halo_age)
+
         r_iso, rho_iso = integrate_profile(10 ** log_rho_i,
                                            velocity_dispersion_i, rs, r1, rmin_fac=rmin_profile,
                                            rmax_fac=rmax_profile)

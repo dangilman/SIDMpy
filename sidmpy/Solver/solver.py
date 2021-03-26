@@ -1,9 +1,9 @@
 import numpy as np
-from sidmpy.Solver.util import nfw_velocity_dispersion, compute_r1, compute_rho_sigmav_grid
+from sidmpy.Solver.util import nfw_velocity_dispersion, compute_r1, compute_rho_sigmav_grid, compute_r1_nfw_velocity_dispersion
 
 def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, rmax_profile=2.5,
                   vdis_min_scale=0.3, vdis_max_scale=2., rho_min_scale=0.04, rho_max_scale=10., plot=False, tol=1e-2,
-                  solver_resolution=12, n_iter_max=12):
+                  solver_resolution=12, n_iter_max=12, use_nfw_velocity_dispersion=False):
 
     """
     This function finds a solution to system of equations:
@@ -58,7 +58,7 @@ def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, 
         vdis_values = vdis_values.ravel()
 
         fit_grid = compute_rho_sigmav_grid(log_rho_values, vdis_values, rho_s, rs, cross_section_class,
-                                           halo_age, rmin_profile, rmax_profile)
+                                           halo_age, rmin_profile, rmax_profile, use_nfw_velocity_dispersion)
 
         idx_best = np.argmin(fit_grid)
         fit_quality_last = fit_grid[idx_best]
@@ -100,5 +100,8 @@ def solve_profile(rho_s, rs, cross_section_class, halo_age, rmin_profile=0.001, 
         else:
             n_iter += 1
 
-    r1 = compute_r1(rho_s, rs, vdis_best, cross_section_class, halo_age)
+    if use_nfw_velocity_dispersion:
+        r1 = compute_r1_nfw_velocity_dispersion(rho_s, rs, cross_section_class, halo_age)
+    else:
+        r1 = compute_r1(rho_s, rs, vdis_best, cross_section_class, halo_age)
     return 10 ** log_rho_best, vdis_best, r1
