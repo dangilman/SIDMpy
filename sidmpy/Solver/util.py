@@ -231,3 +231,9 @@ def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section
         fit_grid[i] = fit_qual
 
     return fit_grid
+
+G = 4.3e-6
+rho_s = 10**7.5
+rs = 0.1
+print(np.sqrt(4 * np.pi * G * rho_s * rs ** 2))
+print(nfw_velocity_dispersion(rs, rho_s, rs) * 3)

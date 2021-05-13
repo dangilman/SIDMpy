@@ -9,7 +9,6 @@ redshifts_tchannel = [0, 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6, 1.8, 2.0,
 v_dependence_tchannel = np.append(np.arange(10, 55, 3), 100)
 mass_values_tchannel = np.arange(6, 10.25, 0.25)
 points_tchannel = (v_dependence_tchannel, cross_section_normalization_tchannel, redshifts_tchannel, mass_values_tchannel)
-
 logrho_values_tchannel = np.stack((log_rho_vpower10, log_rho_vpower13, log_rho_vpower16,
                              log_rho_vpower19, log_rho_vpower22,
                              log_rho_vpower25, log_rho_vpower28, log_rho_vpower31,
