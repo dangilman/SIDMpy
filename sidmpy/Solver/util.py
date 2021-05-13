@@ -160,8 +160,9 @@ def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     def _integrand(rprime):
         return TNFWprofile(rprime, rho_s, rs, 1000000000 * rs) * nfwprofile_mass(rho_s, rs, rprime) / rprime ** 2
 
+    rmax_init = 2 * rs
     rmax_scale = 2.
-    rmax = rmax_scale * rs
+    rmax = rmax_init + rmax_scale * rs
     integral = quad(_integrand, r, rmax)[0]
     count_max = 5.
     count = 0
@@ -231,9 +232,3 @@ def compute_rho_sigmav_grid(log_rho_values, vdis_values, rhos, rs, cross_section
         fit_grid[i] = fit_qual
 
     return fit_grid
-
-G = 4.3e-6
-rho_s = 10**7.5
-rs = 0.1
-print(np.sqrt(4 * np.pi * G * rho_s * rs ** 2))
-print(nfw_velocity_dispersion(rs, rho_s, rs) * 3)
