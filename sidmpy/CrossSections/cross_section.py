@@ -3,6 +3,14 @@ from scipy.integrate import quad
 
 class InteractionCrossSection(object):
 
+    """
+    This is a general class for an interaction cross section that computes properties of the cross section,
+    particularly integrals over it weighted by velocity to some power.
+
+    Each specific cross section is a subclass of this this class, and should have a (private) function called
+    _velocity_dependence_kernel that returns the amplitude of the cross section given a velocity.
+    """
+
     def __init__(self, norm, velocity_dependence_kernel):
 
         self.norm = norm
@@ -89,6 +97,18 @@ class InteractionCrossSection(object):
 
     def _integral(self, v_rms, n, func):
 
+        """
+
+        :param v_rms: the r.m.s. velocity dispersion of the halo
+        :param n: the exponent of the velocity term in the integrand
+        :param func: a function that returns the cross section as a function of velocity
+        :return: the integral in Equation 4 of this paper https://arxiv.org/pdf/2102.09580.pdf
+
+        K(v) * v^n * sigma(v)
+
+        where K(v) is the Maxwell Boltzmann kernel
+
+        """
         args = (v_rms, n, func)
         return quad(self._integrand, 0, 100 * v_rms, args)[0]
 
