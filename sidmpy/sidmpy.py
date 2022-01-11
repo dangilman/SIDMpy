@@ -22,7 +22,7 @@ def solve_sigmav_with_interpolation(halo_mass, halo_redshift, delta_c_over_c, cr
 
     if cross_section_type == 'POWER_LAW':
         raise Exception('net yet implemented')
-    elif cross_section_type == 'TCHANNEL':
+    elif cross_section_type == 'TCHANNEL' or "BREIT_WIGNER":
         return velocity_dispersion_tchannel(np.log10(halo_mass), halo_redshift, kwargs_cross_section, delta_c_over_c,
                                             apply_delta_c_correction)
     else:
