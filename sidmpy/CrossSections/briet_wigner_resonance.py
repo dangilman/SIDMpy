@@ -1,5 +1,7 @@
 from sidmpy.CrossSections.cross_section import InteractionCrossSection
 from sidmpy.CrossSections.velocity_independent import VelocityIndependentCrossSection
+from math import e
+
 
 class BreitWigner(InteractionCrossSection):
 
@@ -9,7 +11,7 @@ class BreitWigner(InteractionCrossSection):
     the cross section is given as a sum of a velocity-independent piece with amplitude sigma_0, plus a resonance term
     given by the Breit-Wigner resonance function. The full form of the cross section is
 
-    sigma(v) = norm + k * ((v - v_ref)^2 + w^2)^-1
+    sigma(v) = norm * ( 1 +  k * ((v - v_ref)^2 + w^2)^-1)
 
     The height of the resonance is given by k, the position of the resonance is determined by v_ref, and the width
     of the resonance is determined by w.
@@ -45,4 +47,4 @@ class BreitWigner(InteractionCrossSection):
 
     def _velocity_dependence_kernel(self, v):
 
-        pass
+        return  (1 - e**(-((v-self._vref)/self._w)**2)) + (self._k/self._norm) * self._w**2 * ((v-self._vref)**2 + self._w**2)**(-1)
