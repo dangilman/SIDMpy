@@ -19,6 +19,10 @@ class InterpolatedCollapseTimescale(object):
             self.param_ranges_dict[param_names[i]] = ran
 
         counter = 0
+        print('param_names: ', param_names)
+        print('n params: ', len(param_names))
+        print('n sample arrays: ', len(param_arrays))
+        
         if len(param_names) == 1:
             values = []
             points = (param_arrays[0])
