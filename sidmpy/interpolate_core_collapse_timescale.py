@@ -148,10 +148,10 @@ class InterpolatedCollapseTimescale(object):
         return np.squeeze(self._interp_function(tuple(args)))
 
 def interpolate_collapse_fraction(fname, cross_section_class, param_names, param_arrays, params_fixed, m1,
-                                  kwargs_collapse_fraction):
+                                  kwargs_collapse_fraction, nproc):
 
     interp_timescale = InterpolatedCollapseTimescale(m1, m1 * 1.05, cross_section_class,
-                                                     param_names, param_arrays, params_fixed, kwargs_collapse_fraction)
+                                                     param_names, param_arrays, params_fixed, kwargs_collapse_fraction, nproc=nproc)
 
     f = open('interpolated_collapse_fraction_'+fname, 'wb')
     pickle.dump(interp_timescale, f)
