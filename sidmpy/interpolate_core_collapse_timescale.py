@@ -22,7 +22,7 @@ class InterpolatedCollapseTimescale(object):
         print('param_names: ', param_names)
         print('n params: ', len(param_names))
         print('n sample arrays: ', len(param_arrays))
-        
+
         if len(param_names) == 1:
             values = []
             points = (param_arrays[0])
@@ -115,8 +115,8 @@ class InterpolatedCollapseTimescale(object):
 
             values = []
             points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3], param_arrays[4])
-            n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * \
-                      len(param_arrays[3] * len(param_arrays[4]))
+            
+            n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * len(param_arrays[3]) * len(param_arrays[4])
             print('n total: ', n_total)
             step = int(n_total / step_scale)
             args_list = []
@@ -161,24 +161,28 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
     pickle.dump(interp_timescale, f)
     f.close()
 
-# from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
-# # norm, v_ref, v_res, w_res, res_amplitude
-# param_names = ['norm', 'v_ref', 'v_res', 'res_amplitude']
-#
-# params_fixed = {'w_res': 1.0}
-# kwargs_collapse_fraction = {'redshift': 0.5, 'timescale_factor': 20.0}
-# param_arrays = [np.linspace(1.0, 10.0, 15), np.linspace(1, 40.0, 20), np.linspace(1.0, 40, 30), np.linspace(1.0, 50, 30)]
-# fname = 'logM68_expresonanttchannel'
-# m1 = 10 ** 7
-# interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
-#
-# fname = 'logM89_expresonanttchannel'
-# m1 = 10 ** 8.5
-# interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
-#
-# fname = 'logM910_expresonanttchannel'
-# m1 = 10 ** 9.5
-# interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
+from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
+# norm, v_ref, v_res, w_res, res_amplitude
+param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude']
+
+params_fixed = {}
+kwargs_collapse_fraction = {'redshift': 0.5, 'timescale_factor': 20.0}
+param_arrays = [np.linspace(1, 10.0, 10), np.linspace(1, 50.0, 30), np.linspace(1, 40, 25), np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 60)]
+fname = 'logM68_expresonanttchannel'
+m1 = 10 ** 7
+nproc = 8
+interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction,
+                              nproc)
+
+fname = 'logM89_expresonanttchannel'
+m1 = 10 ** 8.5
+interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction,
+                              nproc)
+
+fname = 'logM910_expresonanttchannel'
+m1 = 10 ** 9.5
+interpolate_collapse_fraction(fname, ExpResonantTChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction,
+                              nproc)
 
 
 # from sidmpy.CrossSections.tchannel import TChannel
