@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import quad
+from scipy.interpolate import interp1d
 
 class InteractionCrossSection(object):
 
@@ -15,6 +16,13 @@ class InteractionCrossSection(object):
 
         self.norm = norm
         self._vdep_func = velocity_dependence_kernel
+        self._scattering_rate_cross_section_interp = None
+
+    def interpolate_scattering_rate_cross_section(self, vmin=0.1, vmax=2000):
+
+        log10v = np.linspace(np.log10(vmin), np.log10(vmax), 300)
+        sigma_v = self.scattering_rate_cross_section(10 ** log10v)
+        self._scattering_rate_cross_section_interp = interp1d(log10v, sigma_v)
 
     def evaluate(self, v):
         """
@@ -65,7 +73,16 @@ class InteractionCrossSection(object):
         :return: the velocity-weighted cross section in units km/sec * cm^2/gram
         """
 
-        return self._integral(v_rms, 1, self.evaluate)
+        if self._scattering_rate_cross_section_interp is None:
+
+            if isinstance(v_rms, list) or isinstance(v_rms, np.ndarray):
+                integral = [self._integral(vi, 1, self.evaluate) for vi in v_rms]
+                return np.array(integral)
+            else:
+                return self._integral(v_rms, 1, self.evaluate)
+
+        else:
+            return self._scattering_rate_cross_section_interp(np.log10(v_rms))
 
     def momentum_exchange_average(self, v_rms):
 
