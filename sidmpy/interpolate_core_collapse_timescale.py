@@ -26,8 +26,8 @@ class InterpolatedCollapseTimescale(object):
             print('n total: ', n_total)
             step = int(n_total / step_scale)
             for p1 in param_arrays[0]:
-                if counter % step == 0:
-                    print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                # if counter % step == 0:
+                #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
                 kw = {param_names[0]: p1}
                 kw.update(params_fixed)
                 cross_model = cross_section_model(**kw)
@@ -45,8 +45,8 @@ class InterpolatedCollapseTimescale(object):
             step = int(n_total / step_scale)
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
-                    if counter % step == 0:
-                        print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                    # if counter % step == 0:
+                    #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
                     kw = {param_names[0]: p1, param_names[1]: p2}
                     kw.update(params_fixed)
                     cross_model = cross_section_model(**kw)
@@ -66,8 +66,8 @@ class InterpolatedCollapseTimescale(object):
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
                     for p3 in param_arrays[2]:
-                        if counter % step == 0:
-                            print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                        # if counter % step == 0:
+                        #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
                         kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3}
                         kw.update(params_fixed)
                         cross_model = cross_section_model(**kw)
@@ -121,8 +121,8 @@ class InterpolatedCollapseTimescale(object):
                     for p3 in param_arrays[2]:
                         for p4 in param_arrays[3]:
                             for p5 in param_arrays[4]:
-                                if counter % step == 0:
-                                    print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                                # if counter % step == 0:
+                                #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
                                 kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4,
                                       param_names[4]: p5}
                                 kw.update(params_fixed)
