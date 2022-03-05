@@ -18,121 +18,121 @@ class InterpolatedCollapseTimescale(object):
             self.param_ranges.append(ran)
             self.param_ranges_dict[param_names[i]] = ran
 
-        counter = 0
         print('param_names: ', param_names)
         print('n params: ', len(param_names))
         print('n sample arrays: ', len(param_arrays))
-
-        if len(param_names) == 1:
-            values = []
-            points = (param_arrays[0])
-            n_total = len(param_arrays[0])
-            print('n total: ', n_total)
-            step = int(n_total / step_scale)
-            for p1 in param_arrays[0]:
-                # if counter % step == 0:
-                #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
-                kw = {param_names[0]: p1}
-                kw.update(params_fixed)
-                cross_model = cross_section_model(**kw)
-                f = fraction_collapsed_halos(m1, m2, cross_model, **kwargs_fraction)
-                values.append(f)
-                counter += 1
-            values = np.array(values)
-            shape = (len(param_arrays[0]))
-
-        elif len(param_names) == 2:
-            values = []
+        # redshift is always last
+        if len(param_arrays) == 2:
+            args_list = []
             points = (param_arrays[0], param_arrays[1])
             n_total = len(param_arrays[0]) * len(param_arrays[1])
             print('n total: ', n_total)
-            step = int(n_total / step_scale)
+
             for p1 in param_arrays[0]:
-                for p2 in param_arrays[1]:
-                    # if counter % step == 0:
-                    #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
-                    kw = {param_names[0]: p1, param_names[1]: p2}
+                for redshift in param_arrays[1]:
+                    kw = {param_names[0]: p1}
                     kw.update(params_fixed)
+                    kwargs_fraction['redshift'] = redshift
                     cross_model = cross_section_model(**kw)
-                    f = fraction_collapsed_halos(m1, m2, cross_model, **kwargs_fraction)
-                    values.append(f)
-                    counter += 1
-            values = np.array(values)
+                    new = (m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
+                    args_list.append(new)
+
             shape = (len(param_arrays[0]), len(param_arrays[1]))
 
-        elif len(param_names) == 3:
+        elif len(param_arrays) == 3:
 
-            values = []
+            args_list = []
             points = (param_arrays[0], param_arrays[1], param_arrays[2])
             n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2])
             print('n total: ', n_total)
-            step = int(n_total / step_scale)
+
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
-                    for p3 in param_arrays[2]:
+                    for redshift in param_arrays[2]:
                         # if counter % step == 0:
                         #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
-                        kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3}
+                        kw = {param_names[0]: p1, param_names[1]: p2}
                         kw.update(params_fixed)
+                        kwargs_fraction['redshift'] = redshift
                         cross_model = cross_section_model(**kw)
-                        f = fraction_collapsed_halos(m1, m2, cross_model,
-                                                     kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
-                        values.append(f)
-                        counter += 1
+                        new = (m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
+                        args_list.append(new)
+
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]))
 
-        elif len(param_names) == 4:
+        elif len(param_arrays) == 4:
 
-            values = []
             points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3])
             n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * len(param_arrays[3])
             print('n total: ', n_total)
-            step = int(n_total / step_scale)
 
             args_list = []
 
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
                     for p3 in param_arrays[2]:
-                        for p4 in param_arrays[3]:
+                        for redshift in param_arrays[3]:
 
-                            kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4}
+                            kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3}
                             kw.update(params_fixed)
+                            kwargs_fraction['redshift'] = redshift
                             cross_model = cross_section_model(**kw)
                             new = (m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
                             args_list.append(new)
-                            #
-                            # f = fraction_collapsed_halos(m1, m2, cross_model, **kwargs_fraction)
-                            # values.append(f)
-                            # counter += 1
+
 
             pool = Pool(nproc)
             values = pool.map(fraction_collapsed_halos_pool, args_list)
             pool.close()
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]))
 
-        elif len(param_names) == 5:
+        elif len(param_arrays) == 5:
 
-            values = []
             points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3], param_arrays[4])
-
             n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * len(param_arrays[3]) * len(param_arrays[4])
             print('n total: ', n_total)
-            step = int(n_total / step_scale)
+            args_list = []
+            for p1 in param_arrays[0]:
+                for p2 in param_arrays[1]:
+                    for p3 in param_arrays[2]:
+                        for p4 in param_arrays[3]:
+                            for redshift in param_arrays[4]:
+                                # if counter % step == 0:
+                                #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                                kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4}
+                                kw.update(params_fixed)
+                                kwargs_fraction['redshift'] = redshift
+                                cross_model = cross_section_model(**kw)
+                                new = (
+                                m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
+                                args_list.append(new)
+
+        elif len(param_arrays) == 6:
+
+            points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3], param_arrays[4], param_arrays[5])
+            n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * len(param_arrays[3]) * len(
+                param_arrays[4]) * len(param_arrays[5])
+            print('n total: ', n_total)
             args_list = []
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
                     for p3 in param_arrays[2]:
                         for p4 in param_arrays[3]:
                             for p5 in param_arrays[4]:
-                                # if counter % step == 0:
-                                #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
-                                kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4,
-                                      param_names[4]: p5}
-                                kw.update(params_fixed)
-                                cross_model = cross_section_model(**kw)
-                                new = (m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
-                                args_list.append(new)
+                                for redshift in param_arrays[5]:
+                                    # if counter % step == 0:
+                                    #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
+                                    kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4,
+                                          param_names[4]: p5}
+                                    kw.update(params_fixed)
+                                    kwargs_fraction['redshift'] = redshift
+                                    print(kwargs_fraction)
+                                    cross_model = cross_section_model(**kw)
+                                    new = (
+                                        m1, m2, cross_model, kwargs_fraction['redshift'],
+                                        kwargs_fraction['timescale_factor'])
+                                    args_list.append(new)
+
             pool = Pool(nproc)
             values = pool.map(fraction_collapsed_halos_pool, args_list)
             pool.close()
@@ -163,14 +163,16 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
 
 # from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
 # # norm, v_ref, v_res, w_res, res_amplitude
-# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude']
+# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'redshift']
 # cross_model = ExpResonantTChannel
 #
 # output_folder = ''
 # nproc = 8
 # params_fixed = {}
-# kwargs_collapse_fraction = {'redshift': 0.5, 'timescale_factor': 20.0}
-# param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20), np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40)]
+# kwargs_collapse_fraction = {'timescale_factor': 10.0/3}
+# z_array = [0.2, 0.4, 0.6, 0.8, 1.0]
+# param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20),
+#                 np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40), z_array]
 # n_total = 1
 # for parr in param_arrays:
 #     n_total *= len(parr)
@@ -178,7 +180,7 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
 # fname = output_folder + 'logM68_expresonanttchannel'
 # m1 = 10 ** 7
 # interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
-#
+
 # fname = output_folder + 'logM89_expresonanttchannel'
 # m1 = 10 ** 8.5
 # interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)

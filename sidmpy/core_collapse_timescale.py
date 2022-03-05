@@ -107,7 +107,7 @@ def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_se
     rho_s *= au.solMass / au.kpc ** 3
     scattering_rate_cross_section *= au.cm ** 2 / au.g * au.km / au.s
 
-    rate = 3 * rho_s * scattering_rate_cross_section
+    rate = rho_s * scattering_rate_cross_section
     time = 1 / rate
     time_Gyr = time.to(au.Gyr)
     return rescale * time_Gyr.value
@@ -121,7 +121,6 @@ def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.)
     <sigma(v) v>
 
     given by Equation 4 in this paper https://arxiv.org/pdf/2102.09580.pdf
-    with an additional factor of 3
 
     :param rho_s: the central density normalization of the collisionless NFW profile of the same mass
     :param v_rms: the velocity dispersion of the halo
