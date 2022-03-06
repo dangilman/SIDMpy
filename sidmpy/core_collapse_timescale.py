@@ -27,6 +27,7 @@ def fraction_collapsed_halos(m1, m2, cross_section, redshift, timescale_factor,
 
     l = LensCosmo()
     time = l.cosmo.halo_age(redshift, collapse_redshift)
+
     integrand_numerator = lambda m: m ** alpha * collapse_probability_fromM(time, m, redshift, cross_section,
                                                                                  timescale_factor, t_min_scale, t_max_scale,
                                                                             timescale_pdf)
@@ -103,14 +104,7 @@ def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_se
     v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
     c = l.NFW_concentration(halo_mass, halo_redshift, scatter=False)
     rho_s, _, _ = l.NFW_params_physical(halo_mass, c, halo_redshift)
-    scattering_rate_cross_section = cross_section.scattering_rate_cross_section(v_rms)
-    rho_s *= au.solMass / au.kpc ** 3
-    scattering_rate_cross_section *= au.cm ** 2 / au.g * au.km / au.s
-
-    rate = rho_s * scattering_rate_cross_section
-    time = 1 / rate
-    time_Gyr = time.to(au.Gyr)
-    return rescale * time_Gyr.value
+    return evolution_timescale_scattering_rate(rho_s, v_rms, cross_model, rescale)
 
 def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.):
 
@@ -132,7 +126,7 @@ def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.)
     rho_s *= au.solMass / au.kpc ** 3
     scattering_rate_cross_section *= au.cm ** 2 / au.g * au.km / au.s
 
-    rate = 3 * rho_s * scattering_rate_cross_section
+    rate = rho_s * scattering_rate_cross_section
     time = 1 / rate
     time_Gyr = time.to(au.Gyr)
     return rescale * time_Gyr.value
@@ -155,3 +149,4 @@ def evolution_timescale_NFW(rho_s, rs, cross_section_amplitude):
     const = 2.136e-19  # to year^{-1}
     t_inverse = a * const * v0 * rho_s * cross_section_amplitude
     return 1e-9 / t_inverse
+
