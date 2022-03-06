@@ -126,7 +126,6 @@ class InterpolatedCollapseTimescale(object):
                                           param_names[4]: p5}
                                     kw.update(params_fixed)
                                     kwargs_fraction['redshift'] = redshift
-                                    print(kwargs_fraction)
                                     cross_model = cross_section_model(**kw)
                                     new = (
                                         m1, m2, cross_model, kwargs_fraction['redshift'],
@@ -137,7 +136,40 @@ class InterpolatedCollapseTimescale(object):
             values = pool.map(fraction_collapsed_halos_pool, args_list)
             pool.close()
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
-                     len(param_arrays[4]))
+                     len(param_arrays[4]) * len(param_arrays[5]))
+
+        elif len(param_arrays) == 7:
+
+            points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3], param_arrays[4],
+                      param_arrays[5], param_arrays[6])
+            n_total = len(param_arrays[0]) * len(param_arrays[1]) * len(param_arrays[2]) * len(param_arrays[3]) * len(
+                param_arrays[4]) * len(param_arrays[5] * len(param_arrays[6]))
+            print('n total: ', n_total)
+            args_list = []
+            for p1 in param_arrays[0]:
+                for p2 in param_arrays[1]:
+                    for p3 in param_arrays[2]:
+                        for p4 in param_arrays[3]:
+                            for p5 in param_arrays[4]:
+                                for timescale_factor in param_arrays[5]:
+                                    for redshift in param_arrays[6]:
+
+                                        kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4,
+                                              param_names[4]: p5}
+                                        kw.update(params_fixed)
+                                        kwargs_fraction['redshift'] = redshift
+                                        kwargs_fraction['timescale_factor'] = timescale_factor
+                                        cross_model = cross_section_model(**kw)
+                                        new = (
+                                            m1, m2, cross_model, kwargs_fraction['redshift'],
+                                            kwargs_fraction['timescale_factor'])
+                                        args_list.append(new)
+
+            pool = Pool(nproc)
+            values = pool.map(fraction_collapsed_halos_pool, args_list)
+            pool.close()
+            shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
+                     len(param_arrays[4]) * len(param_arrays[5]) * len(param_arrays[6]))
 
         else:
             raise Exception('only 2, 3, 4 and 5D interpolations implemented')
@@ -163,14 +195,15 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
 
 # from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
 # # norm, v_ref, v_res, w_res, res_amplitude
-# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'redshift']
+# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'timescale_factor', 'redshift']
 # cross_model = ExpResonantTChannel
 #
 # output_folder = ''
-# nproc = 8
+# nproc = 50
 # params_fixed = {}
-# kwargs_collapse_fraction = {'timescale_factor': 10.0/3}
-# z_array = [0.2, 0.4, 0.6, 0.8, 1.0]
+# kwargs_collapse_fraction = {}
+# z_array = [0.2, 0.45, 0.7, 0.95]
+# tarray = [10/3, 15/3, 20/3]
 # param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20),
 #                 np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40), z_array]
 # n_total = 1
