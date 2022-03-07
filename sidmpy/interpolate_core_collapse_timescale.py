@@ -121,6 +121,9 @@ class InterpolatedCollapseTimescale(object):
                                 m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
                                 args_list.append(new)
 
+            shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
+                     len(param_arrays[4]))
+
         elif len(param_arrays) == 6:
 
             points = (param_arrays[0], param_arrays[1], param_arrays[2], param_arrays[3], param_arrays[4], param_arrays[5])
@@ -150,7 +153,7 @@ class InterpolatedCollapseTimescale(object):
             values = pool.map(fraction_collapsed_halos_pool, args_list)
             pool.close()
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
-                     len(param_arrays[4]) * len(param_arrays[5]))
+                     len(param_arrays[4]), len(param_arrays[5]))
 
         elif len(param_arrays) == 7:
 
@@ -183,7 +186,7 @@ class InterpolatedCollapseTimescale(object):
             values = pool.map(fraction_collapsed_halos_pool, args_list)
             pool.close()
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
-                     len(param_arrays[4]) * len(param_arrays[5]) * len(param_arrays[6]))
+                     len(param_arrays[4]), len(param_arrays[5]), len(param_arrays[6]))
 
         else:
             raise Exception('only 2, 3, 4 and 5D interpolations implemented')
