@@ -193,26 +193,26 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
     pickle.dump(interp_timescale, f)
     f.close()
 
-# from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
-# # norm, v_ref, v_res, w_res, res_amplitude
-# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'timescale_factor', 'redshift']
-# cross_model = ExpResonantTChannel
-#
-# output_folder = ''
-# nproc = 50
-# params_fixed = {}
-# kwargs_collapse_fraction = {}
-# z_array = [0.2, 0.45, 0.7, 0.95]
-# tarray = [10/3, 15/3, 20/3]
-# param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20),
-#                 np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40), z_array]
-# n_total = 1
-# for parr in param_arrays:
-#     n_total *= len(parr)
-# print('n_total: ', n_total); a=input('continue')
-# fname = output_folder + 'logM68_expresonanttchannel'
-# m1 = 10 ** 7
-# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
+# norm, v_ref, v_res, w_res, res_amplitude
+param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'timescale_factor', 'redshift']
+cross_model = ExpResonantTChannel
+
+output_folder = ''
+nproc = 50
+params_fixed = {}
+kwargs_collapse_fraction = {}
+z_array = [0.2, 0.45, 0.7, 0.95]
+tarray = [10/3, 15/3, 20/3]
+param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20),
+                np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40), tarray, z_array]
+n_total = 1
+for parr in param_arrays:
+    n_total *= len(parr)
+print('n_total: ', n_total); a=input('continue')
+fname = output_folder + 'logM68_expresonanttchannel'
+m1 = 10 ** 7
+interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
 
 # fname = output_folder + 'logM89_expresonanttchannel'
 # m1 = 10 ** 8.5
