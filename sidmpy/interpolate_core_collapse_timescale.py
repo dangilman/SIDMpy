@@ -7,8 +7,7 @@ from multiprocess.pool import Pool
 
 class InterpolatedCollapseTimescale(object):
 
-    def __init__(self, m1, m2, cross_section_model, param_names, param_arrays, params_fixed={},
-                 kwargs_fraction={}, step_scale=50, nproc=8):
+    def __init__(self, points, values, param_names, param_arrays, shape):
 
         self.param_names = param_names
         self.param_ranges = []
@@ -17,6 +16,21 @@ class InterpolatedCollapseTimescale(object):
             ran = [param[0], param[-1]]
             self.param_ranges.append(ran)
             self.param_ranges_dict[param_names[i]] = ran
+
+        self._interp_function = RegularGridInterpolator(points, np.array(values).reshape(shape),
+                                                        bounds_error=False, fill_value=None)
+
+    @classmethod
+    def fromParamArray(self, m1, m2, cross_section_model, param_names, param_arrays, params_fixed={},
+                 kwargs_fraction={}, nproc=8):
+
+        param_names = param_names
+        param_ranges = []
+        param_ranges_dict = {}
+        for i, param in enumerate(param_arrays):
+            ran = [param[0], param[-1]]
+            param_ranges.append(ran)
+            param_ranges_dict[param_names[i]] = ran
 
         print('param_names: ', param_names)
         print('n params: ', len(param_names))
@@ -174,11 +188,7 @@ class InterpolatedCollapseTimescale(object):
         else:
             raise Exception('only 2, 3, 4 and 5D interpolations implemented')
 
-        if len(param_names) == 1:
-            self._interp_function = interp1d(points, values)
-        else:
-            self._interp_function = RegularGridInterpolator(points, np.array(values).reshape(shape),
-                                                            bounds_error=False, fill_value=None)
+        return InterpolatedCollapseTimescale(points, values, param_names, param_arrays, shape)
 
     def __call__(self, *args):
         return np.squeeze(self._interp_function(tuple(args)))
