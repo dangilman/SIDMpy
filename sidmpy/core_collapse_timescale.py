@@ -104,7 +104,7 @@ def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_se
     v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
     c = l.NFW_concentration(halo_mass, halo_redshift, scatter=False)
     rho_s, _, _ = l.NFW_params_physical(halo_mass, c, halo_redshift)
-    return evolution_timescale_scattering_rate(rho_s, v_rms, cross_model, rescale)
+    return evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale)
 
 def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.):
 
