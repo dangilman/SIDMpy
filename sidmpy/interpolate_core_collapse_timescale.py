@@ -7,7 +7,7 @@ from multiprocess.pool import Pool
 
 class InterpolatedCollapseTimescale(object):
 
-    def __init__(self, points, values, param_names, param_arrays, shape):
+    def __init__(self, points, values, param_names, param_arrays):
 
         self.param_names = param_names
         self.param_ranges = []
@@ -17,7 +17,7 @@ class InterpolatedCollapseTimescale(object):
             self.param_ranges.append(ran)
             self.param_ranges_dict[param_names[i]] = ran
 
-        self._interp_function = RegularGridInterpolator(points, np.array(values).reshape(shape),
+        self._interp_function = RegularGridInterpolator(points, values,
                                                         bounds_error=False, fill_value=None)
 
     @classmethod
