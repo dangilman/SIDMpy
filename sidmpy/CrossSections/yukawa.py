@@ -1,6 +1,5 @@
 from sidmpy.CrossSections.cross_section import InteractionCrossSection
-import numpy as np
-from sidmpy.classics.classics_copy import sigma_combined
+
 
 class SWaveResonance(InteractionCrossSection):
 
@@ -36,39 +35,4 @@ class SWaveResonance(InteractionCrossSection):
         denom = (1 + (v/v_regularize) ** self.low_v_exponent) * (1 + (v/self.vref)**2) ** high_v_exponent
 
         return amp_at_vmatch/denom
-
-class SemiClassicalYukawa(InteractionCrossSection):
-
-    """
-
-    """
-
-    def __init__(self, alpha_chi, m_chi, m_phi, mode='T', sign='attractive'):
-
-        self.alpha_chi = alpha_chi
-        self.m_chi = m_chi
-        self.m_phi = m_phi
-        self.mode = mode
-        self.sign = sign
-
-        self.norm = np.pi / self.m_phi ** 2
-        super(SemiClassicalYukawa, self).__init__(self.norm, self._velocity_dependence_kernel)
-
-    @property
-    def kwargs(self):
-        """
-        Returns the keyword arguments for this cross section model
-        """
-        return {'alpha_chi': self.alpha_chi, 'm_chi': self.m_chi, 'm_phi': self.m_phi}
-
-    def _velocity_dependence_kernel(self, v):
-
-        v_over_c = v/299792
-        kappa = self.m_chi * v_over_c / 2 / self.m_phi
-        beta = 2 * self.alpha_chi * self.m_phi / self.m_chi / v_over_c ** 2
-        if isinstance(v, np.ndarray) or isinstance(v, list):
-            out = [sigma_combined(kappa[i], beta[i], self.mode, self.sign) for i in range(0, len(v))]
-            return np.array(out)
-        else:
-            return sigma_combined(kappa, beta, self.mode, self.sign)
 
