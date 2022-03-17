@@ -1,66 +1,74 @@
 from sidmpy.CrossSections.cross_section import InteractionCrossSection
 import numpy as np
+from sidmpy.classics.classics_copy import sigma_combined
 
-
-class AttractiveYukawa(InteractionCrossSection):
-
-    """
-    This implements a velocity-dependent cross section of the form:
-
-    sigma_max * (4 pi / 22.7) * b^2 * log(1 + 1/b) for b < 0.1
-    sigma_max * (8 pi / 22.7) * b^2 * (1 + 1.5 * b^1.65)^-1 for 0.1 < b < 10^3
-    sigma_max * (pi / 22.7) * [log(b) + 1 - 1/(2 * log(b)) ]^2 for b > 10^3
-
-    where b = pi * (v_max / v)^2, and sigma_max is the amplitude of <sigma(v) v> at v_max
+class SWaveResonance(InteractionCrossSection):
 
     """
+    A cross section model that scales v^-2 at low v and v^-4 at high v
+    The cross section is regularized at v << 1 km/sec to avoid infintities
 
-    def __init__(self, norm, v_ref):
+    norm specifies the amplitude at 30 km/sec
+    """
+    def __init__(self, norm, vref, low_v_exponent, v_match=30):
 
-        self._vmax = v_ref
-
-        super(AttractiveYukawa, self).__init__(norm, self._velocity_dependence_kernel)
+        self.v_match = v_match
+        self.norm = norm
+        self.vref = vref
+        self.low_v_exponent = low_v_exponent
+        super(SWaveResonance, self).__init__(self.norm, self._velocity_dependence_kernel)
 
     @property
     def kwargs(self):
         """
         Returns the keyword arguments for this cross section model
         """
-        return {'norm': self.norm, 'v_ref': self._vmax}
-
-    def _beta(self, v):
-
-        return np.pi * (self._vmax / v)**2
-
-    def _vdep_kernel_single_point(self, b):
-
-        pi = np.pi
-        coef = pi / 22.7
-
-        if isinstance(b, float) or isinstance(b, int):
-            if b <= 0.1:
-                return 3.23 * coef * b ** 2 * np.log(1 + 1 / b)
-            elif b <= 10 ** 3:
-                return 8 * coef * b ** 2 * (1 + 1.5 * b ** 1.65) ** -1
-            else:
-                return 0.975 * coef * (np.log(b) + 1 - 1 / (2 * np.log(b))) ** 2
-
+        return {'norm': self.norm, 'verf': self.vref, 'low_v_exponent': self.low_v_exponent}
 
     def _velocity_dependence_kernel(self, v):
 
-        b = self._beta(v)
+        v_regularize = 1
 
-        if isinstance(v, float) or isinstance(v, int):
+        high_v_exponent = 2 - self.low_v_exponent
 
-            return self._vdep_kernel_single_point(b)
+        amp_at_vmatch = (1 + (self.v_match/v_regularize) ** self.low_v_exponent) * (1 + (self.v_match/self.vref)**2) ** high_v_exponent
 
+        denom = (1 + (v/v_regularize) ** self.low_v_exponent) * (1 + (v/self.vref)**2) ** high_v_exponent
+
+        return amp_at_vmatch/denom
+
+class SemiClassicalYukawa(InteractionCrossSection):
+
+    """
+
+    """
+
+    def __init__(self, alpha_chi, m_chi, m_phi, mode='T', sign='attractive'):
+
+        self.alpha_chi = alpha_chi
+        self.m_chi = m_chi
+        self.m_phi = m_phi
+        self.mode = mode
+        self.sign = sign
+
+        self.norm = np.pi / self.m_phi ** 2
+        super(SemiClassicalYukawa, self).__init__(self.norm, self._velocity_dependence_kernel)
+
+    @property
+    def kwargs(self):
+        """
+        Returns the keyword arguments for this cross section model
+        """
+        return {'alpha_chi': self.alpha_chi, 'm_chi': self.m_chi, 'm_phi': self.m_phi}
+
+    def _velocity_dependence_kernel(self, v):
+
+        v_over_c = v/299792
+        kappa = self.m_chi * v_over_c / 2 / self.m_phi
+        beta = 2 * self.alpha_chi * self.m_phi / self.m_chi / v_over_c ** 2
+        if isinstance(v, np.ndarray) or isinstance(v, list):
+            out = [sigma_combined(kappa[i], beta[i], self.mode, self.sign) for i in range(0, len(v))]
+            return np.array(out)
         else:
-
-            b = np.array(b)
-            shape0 = b.shape
-            b = b.ravel()
-            out = [self._vdep_kernel_single_point(bi) for bi in b]
-            out = np.array(out).reshape(shape0)
-
-            return out
+            return sigma_combined(kappa, beta, self.mode, self.sign)
 

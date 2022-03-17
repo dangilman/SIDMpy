@@ -84,12 +84,13 @@ class InterpolatedCollapseTimescale(object):
 
             for p1 in param_arrays[0]:
                 for p2 in param_arrays[1]:
-                    for p3 in param_arrays[2]:
+                    for timescale_factor in param_arrays[2]:
                         for redshift in param_arrays[3]:
 
-                            kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3}
+                            kw = {param_names[0]: p1, param_names[1]: p2}
                             kw.update(params_fixed)
                             kwargs_fraction['redshift'] = redshift
+                            kwargs_fraction['timescale_factor'] = timescale_factor
                             cross_model = cross_section_model(**kw)
                             new = (m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
                             args_list.append(new)
@@ -135,13 +136,13 @@ class InterpolatedCollapseTimescale(object):
                 for p2 in param_arrays[1]:
                     for p3 in param_arrays[2]:
                         for p4 in param_arrays[3]:
-                            for p5 in param_arrays[4]:
+                            for timescale_factor in param_arrays[4]:
                                 for redshift in param_arrays[5]:
                                     # if counter % step == 0:
                                     #     print(str(np.round(100 * counter / n_total, 1)) + '% ')
-                                    kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4,
-                                          param_names[4]: p5}
+                                    kw = {param_names[0]: p1, param_names[1]: p2, param_names[2]: p3, param_names[3]: p4}
                                     kw.update(params_fixed)
+                                    kwargs_fraction['timescale_factor'] = timescale_factor
                                     kwargs_fraction['redshift'] = redshift
                                     cross_model = cross_section_model(**kw)
                                     new = (
@@ -191,7 +192,7 @@ class InterpolatedCollapseTimescale(object):
         else:
             raise Exception('only 2, 3, 4 and 5D interpolations implemented')
 
-        return InterpolatedCollapseTimescale(points, values, param_names, param_arrays, shape)
+        return InterpolatedCollapseTimescale(points, np.array(values).reshape(shape), param_names, param_arrays)
 
     def __call__(self, *args):
         return np.squeeze(self._interp_function(tuple(args)))
@@ -199,17 +200,56 @@ class InterpolatedCollapseTimescale(object):
 def interpolate_collapse_fraction(fname, cross_section_class, param_names, param_arrays, params_fixed, m1,
                                   kwargs_collapse_fraction, nproc):
 
-    interp_timescale = InterpolatedCollapseTimescale(m1, m1 * 1.05, cross_section_class,
-                                                     param_names, param_arrays, params_fixed, kwargs_collapse_fraction, nproc=nproc)
+    interp_timescale = InterpolatedCollapseTimescale.fromParamArray(m1, m1 * 1.05, cross_section_class,
+                                                     param_names, param_arrays, params_fixed,
+                                                     kwargs_collapse_fraction, nproc=nproc)
 
     f = open('interpolated_collapse_fraction_'+fname, 'wb')
     pickle.dump(interp_timescale, f)
     f.close()
 
-# from sidmpy.CrossSections.resonant_tchannel import ExpResonantTChannel
-# # norm, v_ref, v_res, w_res, res_amplitude
-# param_names = ['norm', 'v_ref', 'v_res', 'w_res', 'res_amplitude', 'timescale_factor', 'redshift']
-# cross_model = ExpResonantTChannel
+#from sidmpy.CrossSections.resonant_constant import ResonantConstant
+# from sidmpy.CrossSections.yukawa import SWaveResonance
+# # norm, v_res, w_res, res_amplitude
+# cross_model = SWaveResonance
+# param_names = ['norm', 'vref', 'low_v_exponent', 'timescale_factor', 'redshift']
+# output_folder = ''
+# nproc = 8
+# params_fixed = {}
+# kwargs_collapse_fraction = {}
+# z_array = [0.2, 0.45, 0.7, 0.95]
+# tarray = [10/3, 15/3, 20/3, 25/3]
+#
+# param_arrays = [np.linspace(1, 30.0, 20, endpoint=True), np.linspace(1, 50.0, 50, endpoint=True),
+#                 np.linspace(0.0, 3.0, 20, endpoint=True), tarray, z_array]
+# n_total = 1
+# for parr in param_arrays:
+#     n_total *= len(parr)
+# print('n_total: ', n_total); a=input('continue')
+# fname = output_folder + 'logM68_flex_tchannel'
+# m1 = 10 ** 7
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+#
+# fname = output_folder + 'logM89_flex_tchannel'
+# m1 = 10 ** 8.5
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+#
+# fname = output_folder + 'logM910_flex_tchannel'
+# m1 = 10 ** 9.5
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+
+# fname = output_folder + 'logM89_resonantconstant'
+# m1 = 10 ** 8.5
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+#
+# fname = output_folder + 'logM910_resonantconstant'
+# m1 = 10 ** 9.5
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
+
+
+# from sidmpy.CrossSections.tchannel import TChannel
+# param_names = ['norm', 'v_ref', 'timescale_factor', 'redshift']
+# cross_model = TChannel
 #
 # output_folder = ''
 # nproc = 50
@@ -217,40 +257,13 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
 # kwargs_collapse_fraction = {}
 # z_array = [0.2, 0.45, 0.7, 0.95]
 # tarray = [10/3, 15/3, 20/3]
-# param_arrays = [np.linspace(1, 10.0, 9), np.linspace(1, 50.0, 20), np.linspace(1, 40, 20),
-#                 np.linspace(1, 5.0, 5), np.linspace(1.0, 100, 40), tarray, z_array]
+# param_arrays = [np.linspace(1, 100.0, 25), np.linspace(1, 50.0, 20), tarray, z_array]
 # n_total = 1
 # for parr in param_arrays:
 #     n_total *= len(parr)
 # print('n_total: ', n_total); a=input('continue')
-# fname = output_folder + 'logM68_expresonanttchannel'
-# m1 = 10 ** 7
-# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
-
-# fname = output_folder + 'logM89_expresonanttchannel'
-# m1 = 10 ** 8.5
-# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
-#
-# fname = output_folder + 'logM910_expresonanttchannel'
+# fname = output_folder + 'logM910_tchannel'
 # m1 = 10 ** 9.5
-# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction, nproc=nproc)
-
-
-# from sidmpy.CrossSections.tchannel import TChannel
-# param_names = ['norm', 'v_ref']
-# n = 50
-# params_fixed = {}
-# kwargs_collapse_fraction = {'redshift': 0.5, 'timescale_factor': 20.0}
-# param_arrays = [np.linspace(0.5, 60.0, n), np.linspace(1.0, 40, n)]
-# fname = 'logM68_tchannel'
-# m1 = 10 ** 7
-# interpolate_collapse_fraction(fname, TChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
-#
-# fname = 'logM89_tchannel'
-# m1 = 5 * 10 ** 8
-# interpolate_collapse_fraction(fname, TChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
-#
-# fname = 'logM910_tchannel'
-# m1 = 5 * 10 ** 9
-# interpolate_collapse_fraction(fname, TChannel, param_names, param_arrays, params_fixed, m1, kwargs_collapse_fraction)
+# interpolate_collapse_fraction(fname, cross_model, param_names, param_arrays, params_fixed, m1,
+#                                   kwargs_collapse_fraction, nproc)
 #
