@@ -123,6 +123,9 @@ class InterpolatedCollapseTimescale(object):
                                 m1, m2, cross_model, kwargs_fraction['redshift'], kwargs_fraction['timescale_factor'])
                                 args_list.append(new)
 
+            pool = Pool(nproc)
+            values = pool.map(fraction_collapsed_halos_pool, args_list)
+            pool.close()
             shape = (len(param_arrays[0]), len(param_arrays[1]), len(param_arrays[2]), len(param_arrays[3]),
                      len(param_arrays[4]))
 
