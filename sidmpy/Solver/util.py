@@ -149,6 +149,23 @@ def nfw_circular_velocity(r, rhos, rs):
     m = 4 * np.pi * rs ** 3 * rhos * fx
     return np.sqrt(G * m / r)
 
+def nfw_vmax_fromM(m, z, lens_cosmo=None):
+
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('need to install package pyHalo in order to use this function!')
+
+    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    return nfw_vmax(rhos, rs)
+
+def nfw_vmax(rhos, rs):
+    G = 4.3e-6
+    return 1.65 * np.sqrt(G*rhos * rs**2)
+
 def nfw_velocity_dispersion(r, rho_s, rs, tol=1e-4):
     """
 

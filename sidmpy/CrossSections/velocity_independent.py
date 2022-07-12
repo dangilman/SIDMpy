@@ -11,6 +11,10 @@ class VelocityIndependentCrossSection(InteractionCrossSection):
 
         super(VelocityIndependentCrossSection, self).__init__(norm, self._velocity_dependence_kernel)
 
+    def energy_transfer_cross_section(self, v_rms):
+
+        return self.evaluate(v_rms)
+
     def _velocity_dependence_kernel(self, v):
 
         return 1.

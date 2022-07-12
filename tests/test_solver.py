@@ -1,5 +1,5 @@
-from sidmpy.sidmpy import solve_from_NFW_params
-from sidmpy.sidmpy import solve_rho_with_interpolation, solve_sigmav_with_interpolation
+from sidmpy.SIDMpy import solve_from_NFW_params
+from sidmpy.SIDMpy import solve_rho_with_interpolation, solve_sigmav_with_interpolation
 from sidmpy.Solver.util import nfwprofile_mass, isothermal_profile_density, isothermal_profile_mass, integrate_profile
 from sidmpy.Profiles.halo_density_profiles import TNFWprofile
 import numpy.testing as npt

@@ -1,84 +1,156 @@
 import numpy as np
 import astropy.units as au
-from sidmpy.Solver.util import nfw_velocity_dispersion_fromfit
+from sidmpy.Solver.util import nfw_velocity_dispersion_fromfit, nfw_vmax
 from scipy.integrate import quad
+from sidmpy.dissipation import dissipation_timescale_impact
 from pyHalo.Halos.lens_cosmo import LensCosmo
 
+
 def fraction_collapsed_halos_pool(args):
-    (m1, m2, cross_section, redshift, timescale_factor) = args
-    return fraction_collapsed_halos(m1, m2, cross_section, redshift, timescale_factor)
+    (m1, m2, cross_section, redshift, timescale_factor, collapse_window) = args
+    return fraction_collapsed_halos(m1, m2, cross_section, redshift, timescale_factor, collapse_window)
 
-def fraction_collapsed_halos(m1, m2, cross_section, redshift, timescale_factor,
-                             t_min_scale=0.5, t_max_scale=2.0, alpha=-1.9,
-                             timescale_pdf='LINEAR', collapse_redshift=10., approx=True):
-    """
-    Returns the fraction of core-collapsed objects with mass M m1 < M < m2
-    :param m1: minimum mass
-    :param m2: maximum mass
-    :param redshift: the redshift at which to evaluate core collapse
-    :param timescale_factor: the factor multiplying the relaxation time to get a timescale for core collapse
-    :param cross_section: a cross section class
-    :param t_min_scale:
-    :param t_max_scale:
-    :param alpha: logarithmic slope of the mass function
-    :param timescale_pdf:
-    :return:
-    """
+def collapse_prob_linear_window(rhos, rs, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
+                                velocity_averaging=5):
 
-    l = LensCosmo()
-    time = l.cosmo.halo_age(redshift, collapse_redshift)
+    if kwargs_disp is not None:
+        v = nfw_vmax(rhos, rs)
+        dissipation_factor = dissipation_timescale_impact(v, cross_section, **kwargs_disp)
+        tscale_factor *= dissipation_factor
 
-    integrand_numerator = lambda m: m ** alpha * collapse_probability_fromM(time, m, redshift, cross_section,
-                                                                                 timescale_factor, t_min_scale, t_max_scale,
-                                                                            timescale_pdf)
-    integral_demon = (m2**(1+alpha)-m1**(1+alpha))/(1+alpha)
-
-    if approx or abs(np.log10(m2) - np.log10(m1)) < 0.2:
-        dm = m2 - m1
-        numerator = integrand_numerator(0.5 * (m1 + m2)) * dm
+    halo_age = lens_cosmo.cosmo.halo_age(z)
+    if velocity_averaging == 5:
+        t_scale = evolution_timescale_v5(rhos, rs, None, cross_section)
+    elif velocity_averaging == 3:
+        t_scale = evolution_timescale_outmezguine(rhos, rs, None, cross_section)
     else:
-        numerator = quad(integrand_numerator, m1, m2)[0]
+        raise Exception('only velocity averaging of 3 and 5 implemented')
+    collapse_timescale = tscale_factor * t_scale
 
-    return numerator/integral_demon
+    t_min = collapse_timescale - window / 2
+    t_max = collapse_timescale + window / 2
 
-def collapse_probability_fromM(t, m, halo_redshift, cross_section, timescale_factor, t_min_scale=0.5, t_max_scale=2.0,
-                               type='LINEAR'):
-
-    t_r = evolution_timescale_scattering_rate_fromM(m, halo_redshift, cross_section)
-    t_collapse = timescale_factor * t_r
-    if type == 'HYPERBOLIC':
-        return collapse_probability_hyperbolic(t, t_collapse, t_min_scale, t_max_scale)
-    elif type == 'LINEAR':
-        return collapse_probability_linear(t, t_collapse, t_min_scale, t_max_scale)
+    if halo_age < t_min:
+        return 0.0
+    elif halo_age > t_max:
+        return 1.0
     else:
-        raise Exception('type must be LINEAR or HYPERBOLIC')
+        return (halo_age - t_min) / (t_max - t_min)
 
-def collapse_probability_hyperbolic(t, t_c, t_min_scale=0.5, t_max_scale=2.0):
+def collapse_prob_linear_window_fromM(m, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
+                                velocity_averaging=5):
 
-    t_min_scale /= 4
-    t_max_scale *= 4
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
+    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
 
-    if t < t_min_scale * t_c:
-        return 0.0
-    elif t > t_max_scale * t_c:
-        return 1.0
+    return collapse_prob_linear_window(rhos, rs, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
+                                velocity_averaging)
 
-    t_width = 0.25 * t_c
-    arg = (t - t_c) / t_width
-    return (1 + np.tanh(arg))/2
+def collapse_prob_sigmoid_fromM(m, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
+                          velocity_averaging=5):
 
-def collapse_probability_linear(t, t_c, t_min_scale=0.5, t_max_scale=2.0):
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
+    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
 
-    if t < t_min_scale * t_c:
-        return 0.0
-    elif t > t_max_scale * t_c:
-        return 1.0
+    return collapse_prob_sigmoid(rhos, rs, z, cross_section, lens_cosmo, tscale_factor,
+           window, kwargs_disp, velocity_averaging)
 
-    t_1 = t_min_scale * t_c
-    t_2 = t_max_scale * t_c
-    return (t - t_1) / (t_2 - t_1)
+def collapse_prob_sigmoid(rhos, rs, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
+                          velocity_averaging=5):
 
-def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_section, rescale=1.):
+    if kwargs_disp is not None:
+        v_rms = nfw_velocity_dispersion_fromfit(m)
+        dissipation_factor = dissipation_timescale_impact(v_rms, cross_section, **kwargs_disp)
+        tscale_factor *= dissipation_factor
+
+    halo_age = lens_cosmo.cosmo.halo_age(z)
+    if velocity_averaging == 5:
+        t_scale = evolution_timescale_v5(rhos, rs, None, cross_section)
+    elif velocity_averaging == 3:
+        t_scale = evolution_timescale_outmezguine(rhos, rs, None, cross_section)
+    else:
+        raise Exception('only velocity averaging of 3 and 5 implemented')
+    collapse_timescale = tscale_factor * t_scale
+
+    X = (halo_age - collapse_timescale)/(2*window)
+    p = 1/(1 + np.exp(-X))
+
+    return p
+
+
+def fraction_collapsed_halos(m1, m2, cross_section, z, tscale_factor, collapse_window, lens_cosmo=None, approx=True,
+                             collapse_prob_window='SIGMOID', kwargs_disp=None, velocity_averaging=5):
+    assert m2 > m1
+
+    if collapse_prob_window == 'LINEAR_WINDOW':
+        collapse_prob = collapse_prob_linear_window_fromM
+    elif collapse_prob_window == 'SIGMOID':
+        collapse_prob = collapse_prob_sigmoid_fromM
+    else:
+        raise Exception('collapse_prob_window must be either LINEAR or LINEAR_WINDOW')
+
+    if lens_cosmo is None:
+        lens_cosmo = LensCosmo()
+
+    if m2 / m1 < 2 and approx:
+        return collapse_prob((m1 + m2) / 2, z, cross_section, lens_cosmo, tscale_factor, collapse_window, kwargs_disp,
+                             velocity_averaging)
+
+    def _integrand_denom(m):
+        return m ** -1.9
+
+    def _integrand_numerator(m):
+        return _integrand_denom(m) * collapse_prob(m, z, cross_section, lens_cosmo, tscale_factor, collapse_window,
+                                                   kwargs_disp, velocity_averaging)
+
+    return quad(_integrand_numerator, m1, m2)[0] / quad(_integrand_denom, m1, m2)[0]
+
+def evolution_timescale_Essig_fromM(halo_mass, halo_redshift, cross_section_constant_amplitude, lens_cosmo):
+
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
+
+    v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
+    c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
+    rho_s, _, _ = lens_cosmo.NFW_params_physical(halo_mass, c, halo_redshift)
+
+    c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
+    rho_s, rs, _ = lens_cosmo.NFW_params_physical(halo_mass, c, halo_redshift)
+    rho_s *= au.solMass / au.kpc**3
+    rs *= au.kpc
+    rho_s_rs = rho_s * rs
+
+    cross_section_constant_amplitude *= au.cm**2/au.g
+    cross_section_constant_amplitude = cross_section_constant_amplitude.to(au.kpc**2/au.solMass)
+    term1 = rho_s_rs * cross_section_constant_amplitude
+
+    G = 4.3e-6 * au.kpc/au.solMass * (au.km/au.s)**2
+    term2 = np.sqrt(4 * np.pi * G * rho_s).to(au.s**-1)
+    denom = term1 * term2
+
+    beta = 0.45
+    tscale = 150/beta/denom
+    time_Gyr = tscale.to(au.Gyr)
+
+    return time_Gyr.value
+
+def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_section, lens_cosmo=None):
 
     """
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
@@ -94,19 +166,19 @@ def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_se
     :param cross_section: an instance of the cross section model
     :return: the characteristic timescale for structural evolution in Gyr
     """
-
-    try:
-        from pyHalo.Halos.lens_cosmo import LensCosmo
-        l = LensCosmo()
-    except:
-        raise Exception('could not import module pyHalo (required for this function')
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
 
     v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
-    c = l.NFW_concentration(halo_mass, halo_redshift, scatter=False)
-    rho_s, _, _ = l.NFW_params_physical(halo_mass, c, halo_redshift)
-    return evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale)
+    c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
+    rho_s, _, _ = lens_cosmo.NFW_params_physical(halo_mass, c, halo_redshift)
+    return evolution_timescale_scattering_rate(rho_s, None, v_rms, cross_section)
 
-def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.):
+def evolution_timescale_scattering_rate(rho_s, rs, v_rms, cross_section, rescale=1.):
 
     """
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
@@ -131,7 +203,92 @@ def evolution_timescale_scattering_rate(rho_s, v_rms, cross_section, rescale=1.)
     time_Gyr = time.to(au.Gyr)
     return rescale * time_Gyr.value
 
-def evolution_timescale_NFW(rho_s, rs, cross_section_amplitude):
+def evolution_timescale_outmezguine_fromM(m, z, cross_section, lens_cosmo=None):
+
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
+    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    return evolution_timescale_outmezguine(rhos, rs, None, cross_section)
+
+def evolution_timescale_v5_fromM(m, z, cross_section, lens_cosmo=None):
+
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('could not import module pyHalo (required for this function')
+    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    return evolution_timescale_v5(rhos, rs, None, cross_section)
+
+def evolution_timescale_outmezguine(rho_s, rs, v_rms, cross_section):
+
+    """
+    Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
+    average proportional to
+
+    <sigma(v) v^3>
+
+    given by Equation 4 in this paper https://arxiv.org/pdf/2102.09580.pdf
+
+    :param rho_s: the central density normalization of the collisionless NFW profile of the same mass
+    :param rs: the scale radius of the host halo
+    :param v_rms: the velocity dispersion of the halo
+    :param cross_section: an instance of the cross section model
+    :return: the characteristic timescale for structural evolution in Gyr
+    """
+    G = 4.3e-6
+    vmax = 1.65 * np.sqrt(G*rho_s * rs ** 2)
+    energy_transfer_cross_section = cross_section.energy_transfer_cross_section(0.64 * vmax)
+    sigma_0 = energy_transfer_cross_section
+    t_c = (1/sigma_0) * (100/vmax) * (10**7/rho_s)
+    return t_c
+
+def evolution_timescale_v5(rho_s, rs, v_rms, cross_section):
+
+    """
+    Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
+    average proportional to
+
+    <sigma(v) v^3>
+
+    given by Equation 4 in this paper https://arxiv.org/pdf/2102.09580.pdf
+
+    :param rho_s: the central density normalization of the collisionless NFW profile of the same mass
+    :param rs: the scale radius of the host halo
+    :param v_rms: the velocity dispersion of the halo
+    :param cross_section: an instance of the cross section model
+    :return: the characteristic timescale for structural evolution in Gyr
+    """
+    G = 4.3e-6
+    vmax = 1.65 * np.sqrt(G*rho_s * rs ** 2)
+    thermally_averaged_cross_section = cross_section.v5_transfer_cross_section(vmax)
+    t_c = (1/thermally_averaged_cross_section) * (100/vmax) * (10**7/rho_s)
+    return t_c
+
+def sigma_rhos_rs(cross, halo_mass, redshift):
+
+    try:
+        from pyHalo.Halos.lens_cosmo import LensCosmo
+        l = LensCosmo()
+    except:
+        raise Exception('could not import module pyHalo (required for this function')
+
+    c = l.NFW_concentration(halo_mass, redshift, scatter=False)
+    rho_s, rs, _ = l.NFW_params_physical(halo_mass, c, redshift)
+    rho_s *= au.solMass / au.kpc**3
+    rs *= au.kpc
+    cross *= au.cm**2 / au.g
+    cross = cross.to(au.kpc**2 / au.solMass)
+    return (cross * rho_s * rs).value
+
+def evolution_timescale_NFW(rho_s, rs, v_rms, cross_section_amplitude):
     """
     Evaluates the timescale for the evolution of SIDM profiles given after Equation 2
     of this paper https://arxiv.org/pdf/1901.00499.pdf
@@ -149,4 +306,3 @@ def evolution_timescale_NFW(rho_s, rs, cross_section_amplitude):
     const = 2.136e-19  # to year^{-1}
     t_inverse = a * const * v0 * rho_s * cross_section_amplitude
     return 1e-9 / t_inverse
-
