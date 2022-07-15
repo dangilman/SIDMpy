@@ -212,6 +212,7 @@ def interpolate_collapse_fraction(fname, cross_section_class, param_names, param
     pickle.dump(interp_timescale, f)
     f.close()
 
+
 # from sidmpy.CrossSections.resonant_constant import ResonantConstant
 # from sidmpy.CrossSections.yukawa import SWaveResonance
 # # norm, v_res, w_res, res_amplitude
