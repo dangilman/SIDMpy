@@ -57,7 +57,7 @@ _fname = local_path+'/benchmark9_cross.txt'
 _log10cross9 = np.loadtxt(_fname)
 _cross_interp9 = interp1d(_log10velocity9, _log10cross9)
 
-_log10velocity10 = np.log10(np.logspace(-1., np.log10(300), 61, endpoint=True))
+_log10velocity10 = np.log10(np.logspace(-1., np.log10(300), 51, endpoint=True))
 _fname = local_path+'/benchmark10_cross.txt'
 _log10cross10 = np.loadtxt(_fname)
 _cross_interp10 = interp1d(_log10velocity10, _log10cross10)
@@ -758,7 +758,7 @@ class Benchmark9(InteractionCrossSection):
         """
         return {'m_chi': self._mchi,
                 'm_phi': self._mchi * 10 ** -4.02,
-                'alpha_chi': -10**-2.91}
+                'alpha_chi': -10**-2.89}
 
     @property
     def kappa_beta(self, v=30):
@@ -831,8 +831,8 @@ class Benchmark10(InteractionCrossSection):
         Returns the keyword arguments for this cross section model
         """
         return {'m_chi': self._mchi,
-                'm_phi': self._mchi * 10 ** -4.75,
-                'alpha_chi': 0.005}
+                'm_phi': self._mchi * 10 ** -5.5,
+                'alpha_chi': 0.003}
 
     @property
     def kappa_beta(self, v=30):
@@ -857,8 +857,8 @@ class Benchmark10(InteractionCrossSection):
 
     def _extrapolate(self, v):
 
-        if v < 0.32:
-            log10v = np.log10(0.32)
+        if v < 0.1:
+            log10v = np.log10(0.1)
             return 10 ** self._interp(log10v)
         elif v > 300:
             log10v = np.log10(300)
