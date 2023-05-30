@@ -2,7 +2,6 @@ import numpy as np
 import astropy.units as au
 from sidmpy.Solver.util import nfw_velocity_dispersion_fromfit, nfw_vmax
 from scipy.integrate import quad
-from sidmpy.dissipation import dissipation_timescale_impact
 from pyHalo.Halos.lens_cosmo import LensCosmo
 
 
@@ -256,7 +255,7 @@ def evolution_timescale_v5(rho_s, rs, v_rms, cross_section):
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
     average proportional to
 
-    <sigma(v) v^3>
+    <sigma(v) v^5>
 
     given by Equation 4 in this paper https://arxiv.org/pdf/2102.09580.pdf
 
