@@ -58,35 +58,35 @@ class InteractionCrossSection(object):
 
         return self.norm * self._vdep_func(v)
 
-    def velocity_weighted_average(self, v_rms, n):
+    def velocity_weighted_average(self, v0, n):
 
         """
         Evaluates <v^n sigma(v)>
         :return:
         """
-        return self._integral(v_rms, n, self.evaluate)
+        return self._integral(v0, n, self.evaluate)
 
-    def velocity_moment(self, v_rms, n):
+    def velocity_moment(self, v0, n):
 
         """
         Computes the velocity moment of the MB distribution <v^n>
-        :param v_rms:
+        :param v0: the velocity scale for the integral (should be 0.64 v_max)
         :return:
         """
 
         velocity_dependence_function = lambda x: 1.
-        return self._integral(v_rms, n, velocity_dependence_function)
+        return self._integral(v0, n, velocity_dependence_function)
 
-    def velocity_weighted_cross_section(self, v_rms, n):
+    def velocity_weighted_cross_section(self, v0, n):
         """
         Averages the velcoity dependence of the cross section over a Maxwell-Boltzmann distribution:
 
         <sigma(v) v> / <v>
         """
 
-        return self.velocity_weighted_average(v_rms, n) / self.velocity_moment(v_rms, n)
+        return self.velocity_weighted_average(v0, n) / self.velocity_moment(v0, n)
 
-    def scattering_rate_cross_section(self, v_rms):
+    def scattering_rate_cross_section(self, v0):
         """
         Integrates the velcoity dependence of the cross section over a Maxwell-Boltzmann distribution to compute
         <sigma(v) v>:
@@ -102,16 +102,16 @@ class InteractionCrossSection(object):
 
         if self._scattering_rate_cross_section_interp is None:
 
-            if isinstance(v_rms, list) or isinstance(v_rms, np.ndarray):
-                integral = [self._integral(vi, 1, self.evaluate) for vi in v_rms]
+            if isinstance(v0, list) or isinstance(v0, np.ndarray):
+                integral = [self._integral(vi, 1, self.evaluate) for vi in v0]
                 return np.array(integral)
             else:
-                return self._integral(v_rms, 1, self.evaluate)
+                return self._integral(v0, 1, self.evaluate)
 
         else:
-            return 10**self._scattering_rate_cross_section_interp(np.log10(v_rms))
+            return 10**self._scattering_rate_cross_section_interp(np.log10(v0))
 
-    def momentum_transfer_cross_section(self, v_rms):
+    def momentum_transfer_cross_section(self, v0):
         """
         Integrates the velcoity dependence of the cross section over a Maxwell-Boltzmann distribution:
 
@@ -121,7 +121,7 @@ class InteractionCrossSection(object):
         the most probable speed, and v_rms is the velocity dispersion witgh v_p^2 = 2/3 v_rms^2.
         """
 
-        return self.velocity_weighted_average(v_rms, 2)/self.velocity_moment(v_rms, 2)
+        return self.velocity_weighted_average(v0, 2)/self.velocity_moment(v0, 2)
 
     def energy_transfer_cross_section(self, v):
         """
@@ -165,11 +165,11 @@ class InteractionCrossSection(object):
         else:
             return 10**self._v5_cross_interp(np.log10(v))
 
-    def _integral(self, v_rms, n, func):
+    def _integral(self, v0, n, func):
 
         """
 
-        :param v_rms: the r.m.s. velocity dispersion of the halo
+        :param v0: the velocity scale for the integral (should be 0.64 v_max)
         :param n: the exponent of the velocity term in the integrand
         :param func: a function that returns the cross section as a function of velocity
         :return: the integral in Equation 4 of this paper https://arxiv.org/pdf/2102.09580.pdf
@@ -179,18 +179,18 @@ class InteractionCrossSection(object):
         where K(v) is the Maxwell Boltzmann kernel
 
         """
-        args = (v_rms, n, func)
+        args = (v0, n, func)
         if self.use_trap_z:
             v = np.linspace(self.vmin_integral, self.vmax_integral, 600)
             y = self._integrand(v, *args)
             return np.trapz(y, v)
         else:
-            return quad(self._integrand, 0, min(100 * v_rms, 500), args)[0]
+            return quad(self._integrand, 0, min(100 * v0, 500), args)[0]
 
     @staticmethod
-    def _integrand(v, v_rms, n, func):
-        x = v ** 2 / (4 * v_rms ** 2)
-        kernel = v ** (2 + n) * np.exp(-x) / (2 * np.sqrt(np.pi) * v_rms ** 3)
+    def _integrand(v, v0, n, func):
+        x = v ** 2 / (4 * v0 ** 2)
+        kernel = v ** (2 + n) * np.exp(-x) / (2 * np.sqrt(np.pi) * v0 ** 3)
         return kernel * func(v)
 
 

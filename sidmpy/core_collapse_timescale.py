@@ -206,11 +206,14 @@ def evolution_timescale_outmezguine_fromM(m, z, cross_section, lens_cosmo=None):
 
     if lens_cosmo is None:
         try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
+            from pyHalo.concentration_models import ConcentrationDiemerJoyce
+            from pyHalo.Cosmology.cosmology import Cosmology
+            cosmo = Cosmology()
+            lens_cosmo = LensCosmo(cosmo)
+            c_model = ConcentrationDiemerJoyce(cosmo, scatter=False)
         except:
-            raise Exception('could not import module pyHalo (required for this function')
-    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+            raise Exception('need to install package pyHalo in order to use this function!')
+    c = c_model.nfw_concentration(m, z)
     rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
     return evolution_timescale_outmezguine(rhos, rs, None, cross_section)
 
@@ -221,8 +224,11 @@ def evolution_timescale_v5_fromM(m, z, cross_section, lens_cosmo=None):
             from pyHalo.Halos.lens_cosmo import LensCosmo
             lens_cosmo = LensCosmo()
         except:
-            raise Exception('could not import module pyHalo (required for this function')
-    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+            raise Exception('need to install package pyHalo in order to use this function!')
+    from pyHalo.concentration_models import ConcentrationDiemerJoyce
+    cosmo = lens_cosmo.cosmo
+    c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
+    c = c_model.nfw_concentration(m, z)
     rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
     return evolution_timescale_v5(rhos, rs, None, cross_section)
 
@@ -267,7 +273,7 @@ def evolution_timescale_v5(rho_s, rs, v_rms, cross_section):
     """
     G = 4.3e-6
     vmax = 1.65 * np.sqrt(G*rho_s * rs ** 2)
-    thermally_averaged_cross_section = cross_section.v5_transfer_cross_section(vmax)
+    thermally_averaged_cross_section = cross_section.v5_transfer_cross_section(0.64 * vmax)
     t_c = (1/thermally_averaged_cross_section) * (100/vmax) * (10**7/rho_s)
     return t_c
 

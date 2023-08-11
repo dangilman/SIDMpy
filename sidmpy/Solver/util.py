@@ -157,8 +157,10 @@ def nfw_vmax_fromM(m, z, lens_cosmo=None):
             lens_cosmo = LensCosmo()
         except:
             raise Exception('need to install package pyHalo in order to use this function!')
-
-    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
+    from pyHalo.concentration_models import ConcentrationDiemerJoyce
+    cosmo = lens_cosmo.cosmo
+    c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
+    c = c_model.nfw_concentration(m, z)
     rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
     return nfw_vmax(rhos, rs)
 
