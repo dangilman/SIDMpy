@@ -230,9 +230,9 @@ def evolution_timescale_v5_fromM(m, z, cross_section, lens_cosmo=None):
     c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
     c = c_model.nfw_concentration(m, z)
     rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
-    return evolution_timescale_v5(rhos, rs, None, cross_section)
+    return evolution_timescale_v5(rhos, rs, cross_section)
 
-def evolution_timescale_outmezguine(rho_s, rs, v_rms, cross_section):
+def evolution_timescale_outmezguine(rho_s, r, cross_section):
 
     """
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
@@ -244,7 +244,6 @@ def evolution_timescale_outmezguine(rho_s, rs, v_rms, cross_section):
 
     :param rho_s: the central density normalization of the collisionless NFW profile of the same mass
     :param rs: the scale radius of the host halo
-    :param v_rms: the velocity dispersion of the halo
     :param cross_section: an instance of the cross section model
     :return: the characteristic timescale for structural evolution in Gyr
     """
@@ -255,7 +254,7 @@ def evolution_timescale_outmezguine(rho_s, rs, v_rms, cross_section):
     t_c = (1/sigma_0) * (100/vmax) * (10**7/rho_s)
     return t_c
 
-def evolution_timescale_v5(rho_s, rs, v_rms, cross_section):
+def evolution_timescale_v5(rho_s, rs, cross_section):
 
     """
     Evaluates the timescale for the evolution of SIDM profiles using the scattering rate
@@ -311,3 +310,43 @@ def evolution_timescale_NFW(rho_s, rs, v_rms, cross_section_amplitude):
     const = 2.136e-19  # to year^{-1}
     t_inverse = a * const * v0 * rho_s * cross_section_amplitude
     return 1e-9 / t_inverse
+
+def evolution_timescale_yang2023_fromM(m, z, cross_section, lens_cosmo=None):
+    """
+    Computes the timescale given by Equation 2.2 in https://arxiv.org/pdf/2305.16176.pdf
+    :param m: halo mass
+    :param z: redshift
+    :param cross_section:
+    :param lens_cosmo: an instance of lens_cosmo
+    :return: the evolution timescale in Gyr
+    """
+
+    if lens_cosmo is None:
+        try:
+            from pyHalo.Halos.lens_cosmo import LensCosmo
+            lens_cosmo = LensCosmo()
+        except:
+            raise Exception('need to install package pyHalo in order to use this function!')
+    from pyHalo.concentration_models import ConcentrationDiemerJoyce
+    cosmo = lens_cosmo.cosmo
+    c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
+    c = c_model.nfw_concentration(m, z)
+    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    return evolution_timescale_yang2023(rhos, rs, cross_section)
+
+def evolution_timescale_yang2023(rho_s, rs, cross_section):
+    """
+    Computes the timescale given by Equation 2.2 in https://arxiv.org/pdf/2305.16176.pdf
+    :param rho_s:
+    :param rs:
+    :param cross_section:
+    :return: the evolution timescale in Gyr
+    """
+    C = 0.75
+    G = 4.3e-6
+    vmax = 1.65 * np.sqrt(G*rho_s * rs ** 2)
+    rho = rho_s * au.solMass / au.kpc**3
+    v_scale = np.sqrt(4 * np.pi * G * rho_s * rs ** 2) * au.km / au.s
+    sigma_eff = cross_section.effective_cross_section(0.64*vmax) * au.cm**2 / au.g
+    denom = (sigma_eff * rho * v_scale).to(1/au.Gyr)
+    return (150 / C / denom).value

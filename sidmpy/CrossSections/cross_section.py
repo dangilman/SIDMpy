@@ -51,6 +51,17 @@ class InteractionCrossSection(object):
         log10sigma_v = np.log10(self.v5_transfer_cross_section(10 ** log10v))
         self._v5_cross_interp = interp1d(log10v, log10sigma_v)
 
+    def effective_cross_section(self, v0):
+        """
+        Evaluates the effective scattering cross section (Equation 4.2 from https://arxiv.org/pdf/2205.03392.pdf)
+        :param v0: the velocity scale for the integral (should be 0.64 * v_max)
+        :return: the effective cross section
+        """
+
+        denom = 512.0 * v0 ** 8
+        norm = 2 * np.sqrt(np.pi) * v0 ** 3 # this term appears in the integrand kernel
+        return norm * self.velocity_weighted_average(v0, 5.0) / denom
+
     def evaluate(self, v):
         """
         Evaluates the scattering crossing section at a particular speed
