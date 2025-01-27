@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
-from sidmpy.core_collapse_timescale import fraction_collapsed_halos
+
 
 class InteractionCrossSection(object):
 
@@ -57,8 +57,7 @@ class InteractionCrossSection(object):
         :param v0: the velocity scale for the integral (should be 0.64 * v_max)
         :return: the effective cross section
         """
-
-        denom = 512.0 * v0 ** 8
+        denom = 768.0 * v0 ** 8
         norm = 2 * np.sqrt(np.pi) * v0 ** 3 # this term appears in the integrand kernel
         return norm * self.velocity_weighted_average(v0, 5.0) / denom
 

@@ -1,4 +1,6 @@
 from sidmpy.CrossSections.cross_section import InteractionCrossSection
+import numpy as np
+
 
 class VelocityIndependentCrossSection(InteractionCrossSection):
 
@@ -17,4 +19,4 @@ class VelocityIndependentCrossSection(InteractionCrossSection):
 
     def _velocity_dependence_kernel(self, v):
 
-        return 1.
+        return np.ones_like(v)

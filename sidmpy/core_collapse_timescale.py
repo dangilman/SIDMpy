@@ -4,6 +4,15 @@ from sidmpy.Solver.util import nfw_velocity_dispersion_fromfit, nfw_vmax
 from scipy.integrate import quad
 from pyHalo.Halos.lens_cosmo import LensCosmo
 
+try:
+    from pyHalo.Halos.lens_cosmo import LensCosmo
+    from pyHalo.concentration_models import ConcentrationDiemerJoyce
+    _lens_cosmo = LensCosmo()
+    _cosmo = _lens_cosmo.cosmo
+    _c_model = ConcentrationDiemerJoyce(_lens_cosmo.cosmo, scatter=False)
+except:
+    raise Exception('need to install package pyHalo in order to use this function!')
+
 
 def fraction_collapsed_halos_pool(args):
     (m1, m2, cross_section, redshift, timescale_factor, collapse_window) = args
@@ -19,7 +28,7 @@ def collapse_prob_linear_window(rhos, rs, z, cross_section, lens_cosmo, tscale_f
 
     halo_age = lens_cosmo.cosmo.halo_age(z)
     if velocity_averaging == 5:
-        t_scale = evolution_timescale_v5(rhos, rs, None, cross_section)
+        t_scale = evolution_timescale_v5(rhos, rs, cross_section)
     elif velocity_averaging == 3:
         t_scale = evolution_timescale_outmezguine(rhos, rs, None, cross_section)
     else:
@@ -39,14 +48,8 @@ def collapse_prob_linear_window(rhos, rs, z, cross_section, lens_cosmo, tscale_f
 def collapse_prob_linear_window_fromM(m, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
                                 velocity_averaging=5):
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('could not import module pyHalo (required for this function')
-    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
-    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    c = _c_model.nfw_concentration(m, z)
+    rhos, rs, _ = _lens_cosmo.NFW_params_physical(m, c, z)
 
     return collapse_prob_linear_window(rhos, rs, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
                                 velocity_averaging)
@@ -54,15 +57,8 @@ def collapse_prob_linear_window_fromM(m, z, cross_section, lens_cosmo, tscale_fa
 def collapse_prob_sigmoid_fromM(m, z, cross_section, lens_cosmo, tscale_factor, window, kwargs_disp,
                           velocity_averaging=5):
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('could not import module pyHalo (required for this function')
-    c = lens_cosmo.NFW_concentration(m, z, scatter=False)
-    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
-
+    c = _c_model.nfw_concentration(m, z)
+    rhos, rs, _ = _lens_cosmo.NFW_params_physical(m, c, z)
     return collapse_prob_sigmoid(rhos, rs, z, cross_section, lens_cosmo, tscale_factor,
            window, kwargs_disp, velocity_averaging)
 
@@ -74,9 +70,10 @@ def collapse_prob_sigmoid(rhos, rs, z, cross_section, lens_cosmo, tscale_factor,
         dissipation_factor = dissipation_timescale_impact(v_rms, cross_section, **kwargs_disp)
         tscale_factor *= dissipation_factor
 
-    halo_age = lens_cosmo.cosmo.halo_age(z)
+    halo_age = _lens_cosmo.cosmo.halo_age(z)
+
     if velocity_averaging == 5:
-        t_scale = evolution_timescale_v5(rhos, rs, None, cross_section)
+        t_scale = evolution_timescale_v5(rhos, rs, cross_section)
     elif velocity_averaging == 3:
         t_scale = evolution_timescale_outmezguine(rhos, rs, None, cross_section)
     else:
@@ -100,11 +97,8 @@ def fraction_collapsed_halos(m1, m2, cross_section, z, tscale_factor, collapse_w
     else:
         raise Exception('collapse_prob_window must be either LINEAR or LINEAR_WINDOW')
 
-    if lens_cosmo is None:
-        lens_cosmo = LensCosmo()
-
     if m2 / m1 < 2 and approx:
-        return collapse_prob((m1 + m2) / 2, z, cross_section, lens_cosmo, tscale_factor, collapse_window, kwargs_disp,
+        return collapse_prob((m1 + m2) / 2, z, cross_section, _lens_cosmo, tscale_factor, collapse_window, kwargs_disp,
                              velocity_averaging)
 
     def _integrand_denom(m):
@@ -118,15 +112,8 @@ def fraction_collapsed_halos(m1, m2, cross_section, z, tscale_factor, collapse_w
 
 def evolution_timescale_Essig_fromM(halo_mass, halo_redshift, cross_section_constant_amplitude, lens_cosmo):
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('could not import module pyHalo (required for this function')
-
+    c = _c_model.nfw_concentration(halo_mass, halo_redshift)
     v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
-    c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
     rho_s, _, _ = lens_cosmo.NFW_params_physical(halo_mass, c, halo_redshift)
 
     c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
@@ -165,15 +152,9 @@ def evolution_timescale_scattering_rate_fromM(halo_mass, halo_redshift, cross_se
     :param cross_section: an instance of the cross section model
     :return: the characteristic timescale for structural evolution in Gyr
     """
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('could not import module pyHalo (required for this function')
 
     v_rms = nfw_velocity_dispersion_fromfit(halo_mass)
-    c = lens_cosmo.NFW_concentration(halo_mass, halo_redshift, scatter=False)
+    c = _c_model.nfw_concentration(halo_mass, halo_redshift)
     rho_s, _, _ = lens_cosmo.NFW_params_physical(halo_mass, c, halo_redshift)
     return evolution_timescale_scattering_rate(rho_s, None, v_rms, cross_section)
 
@@ -204,32 +185,14 @@ def evolution_timescale_scattering_rate(rho_s, rs, v_rms, cross_section, rescale
 
 def evolution_timescale_outmezguine_fromM(m, z, cross_section, lens_cosmo=None):
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.concentration_models import ConcentrationDiemerJoyce
-            from pyHalo.Cosmology.cosmology import Cosmology
-            cosmo = Cosmology()
-            lens_cosmo = LensCosmo(cosmo)
-            c_model = ConcentrationDiemerJoyce(cosmo, scatter=False)
-        except:
-            raise Exception('need to install package pyHalo in order to use this function!')
-    c = c_model.nfw_concentration(m, z)
+    c = _c_model.nfw_concentration(m, z)
     rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
     return evolution_timescale_outmezguine(rhos, rs, None, cross_section)
 
 def evolution_timescale_v5_fromM(m, z, cross_section, lens_cosmo=None):
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('need to install package pyHalo in order to use this function!')
-    from pyHalo.concentration_models import ConcentrationDiemerJoyce
-    cosmo = lens_cosmo.cosmo
-    c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
-    c = c_model.nfw_concentration(m, z)
-    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    c = _c_model.nfw_concentration(m, z)
+    rhos, rs, _ = _lens_cosmo.NFW_params_physical(m, c, z)
     return evolution_timescale_v5(rhos, rs, cross_section)
 
 def evolution_timescale_outmezguine(rho_s, r, cross_section):
@@ -278,13 +241,7 @@ def evolution_timescale_v5(rho_s, rs, cross_section):
 
 def sigma_rhos_rs(cross, halo_mass, redshift):
 
-    try:
-        from pyHalo.Halos.lens_cosmo import LensCosmo
-        l = LensCosmo()
-    except:
-        raise Exception('could not import module pyHalo (required for this function')
-
-    c = l.NFW_concentration(halo_mass, redshift, scatter=False)
+    c = _c_model.nfw_concentration(halo_mass, redshift)
     rho_s, rs, _ = l.NFW_params_physical(halo_mass, c, redshift)
     rho_s *= au.solMass / au.kpc**3
     rs *= au.kpc
@@ -311,7 +268,7 @@ def evolution_timescale_NFW(rho_s, rs, v_rms, cross_section_amplitude):
     t_inverse = a * const * v0 * rho_s * cross_section_amplitude
     return 1e-9 / t_inverse
 
-def evolution_timescale_yang2023_fromM(m, z, cross_section, lens_cosmo=None):
+def evolution_timescale_yang2023_fromM(m, z, cross_section):
     """
     Computes the timescale given by Equation 2.2 in https://arxiv.org/pdf/2305.16176.pdf
     :param m: halo mass
@@ -321,17 +278,8 @@ def evolution_timescale_yang2023_fromM(m, z, cross_section, lens_cosmo=None):
     :return: the evolution timescale in Gyr
     """
 
-    if lens_cosmo is None:
-        try:
-            from pyHalo.Halos.lens_cosmo import LensCosmo
-            lens_cosmo = LensCosmo()
-        except:
-            raise Exception('need to install package pyHalo in order to use this function!')
-    from pyHalo.concentration_models import ConcentrationDiemerJoyce
-    cosmo = lens_cosmo.cosmo
-    c_model = ConcentrationDiemerJoyce(lens_cosmo.cosmo, scatter=False)
-    c = c_model.nfw_concentration(m, z)
-    rhos, rs, _ = lens_cosmo.NFW_params_physical(m, c, z)
+    c = _c_model.nfw_concentration(m, z)
+    rhos, rs, _ = _lens_cosmo.NFW_params_physical(m, c, z)
     return evolution_timescale_yang2023(rhos, rs, cross_section)
 
 def evolution_timescale_yang2023(rho_s, rs, cross_section):

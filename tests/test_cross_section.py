@@ -20,3 +20,11 @@ class TestCrossSection(object):
         sigma_v_tchannel = self.cross_tchannel_vindep.scattering_rate_cross_section(vrms)
         npt.assert_almost_equal(sigma_v_tchannel, self.norm * fac, vrms)
 
+    def test_effective_crosssection(self):
+
+        sigma_effective = self.cross_vindep.effective_cross_section(10)
+        npt.assert_almost_equal(sigma_effective, 1)
+
+t = TestCrossSection()
+t.setup()
+t.test_effective_crosssection()

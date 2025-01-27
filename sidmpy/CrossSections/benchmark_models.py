@@ -62,6 +62,12 @@ _fname = local_path+'/benchmark10_cross.txt'
 _log10cross10 = np.loadtxt(_fname)
 _cross_interp10 = interp1d(_log10velocity10, _log10cross10)
 
+_log10velocity11 = np.log10(np.append(np.logspace(0, np.log10(50), 201, endpoint=True),
+                                      np.logspace(np.log10(55),  np.log10(400), 21, endpoint=True)))
+_fname  = local_path + '/benchmark11_cross.txt'
+_log10cross11 = np.loadtxt(_fname)
+_cross_interp11 = interp1d(_log10velocity11, _log10cross11)
+
 class Benchmark0(InteractionCrossSection):
 
     def __init__(self, m_chi, auto_interp=True):
@@ -94,7 +100,6 @@ class Benchmark0(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -4.4,
                 'alpha_chi': -0.00091}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -168,7 +173,6 @@ class Benchmark1(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -3.75,
                 'alpha_chi': -0.000563}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -224,7 +228,6 @@ class Benchmark2(InteractionCrossSection):
                                           self._vmin_integration, self._vmax_integration,
                                           use_trap_z=True, auto_interp=auto_interp)
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -298,7 +301,6 @@ class Benchmark3(InteractionCrossSection):
                                           self._vmin_integration, self._vmax_integration,
                                           use_trap_z=True, auto_interp=auto_interp)
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -372,7 +374,6 @@ class Benchmark4(InteractionCrossSection):
                                           self._vmin_integration, self._vmax_integration,
                                           use_trap_z=True, auto_interp=auto_interp)
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -446,7 +447,6 @@ class Benchmark5(InteractionCrossSection):
                                           self._vmin_integration, self._vmax_integration,
                                           use_trap_z=True, auto_interp=auto_interp)
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -538,7 +538,6 @@ class Benchmark6(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -4.4,
                 'alpha_chi': -0.00091}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -612,7 +611,6 @@ class Benchmark7(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -3.5,
                 'alpha_chi': -0.009}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -686,7 +684,6 @@ class Benchmark8(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -4.5,
                 'alpha_chi': -0.0033}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -760,7 +757,6 @@ class Benchmark9(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -4.02,
                 'alpha_chi': -10**-2.89}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -811,7 +807,6 @@ class Benchmark10(InteractionCrossSection):
         self._mchi = m_chi
         self._interp = _cross_interp10
         norm = 1
-
         super(Benchmark10, self).__init__(norm, self._velocity_dependence_kernel,
                                           self._vmin_integration, self._vmax_integration,
                                           use_trap_z=True, auto_interp=auto_interp)
@@ -834,7 +829,6 @@ class Benchmark10(InteractionCrossSection):
                 'm_phi': self._mchi * 10 ** -5.5,
                 'alpha_chi': 0.003}
 
-    @property
     def kappa_beta(self, v=30):
         """
         :param v: velocity in km/sec
@@ -875,3 +869,107 @@ class Benchmark10(InteractionCrossSection):
         else:
             out = [self._extrapolate(vi) for vi in v]
             return np.array(out)/self._mchi**3
+
+class Benchmark11(InteractionCrossSection):
+
+    def __init__(self, m_chi, auto_interp=True):
+
+        self._vmin_integration = 0.1
+        self._vmax_integration = 10**3.0
+        self._mchi = m_chi
+        self._interp = _cross_interp11
+        norm = 1.0
+        super(Benchmark11, self).__init__(norm, self._velocity_dependence_kernel,
+                                          self._vmin_integration, self._vmax_integration,
+                                          use_trap_z=True, auto_interp=auto_interp)
+
+    @classmethod
+    def scaled(cls, amplitude_at_v, v, auto_interp=True):
+
+        _cross = Benchmark11(1.0, auto_interp=False)
+        amp = _cross.evaluate(v)
+        rescale = amplitude_at_v/amp
+        m_chi = rescale**(-1/3)
+        return Benchmark11(m_chi, auto_interp)
+
+    @property
+    def kwargs(self):
+        """
+        Returns the keyword arguments for this cross section model
+        """
+        return {'m_chi': self._mchi,
+                'm_phi': self._mchi * 10 ** -4.71,
+                'alpha_chi': 0.00198}
+
+    def kappa_beta(self, v=30):
+        """
+        :param v: velocity in km/sec
+        returns the values of kappa, beta, a, and b that delineate different regimes (e.g. quantum vs. semi-classical)
+        """
+        c = 299729
+        voverc = v / c
+        kw = self.kwargs
+        mr = kw['m_phi'] / kw['m_chi']
+        beta = 2 * kw['alpha_chi'] * mr / voverc ** 2
+        k = kw['m_chi'] * voverc / 2
+        kappa = k / kw['m_phi']
+        a = voverc / (2 * kw['alpha_chi'])
+        b = kw['alpha_chi'] / mr
+        return {'kappa': kappa,
+                'beta': beta,
+                'twobetak2': 2 * beta * kappa ** 2,
+                'a': a,
+                'b': b}
+
+    def _extrapolate(self, v):
+
+        if v < 1.0:
+            log10v = np.log10(1.0)
+            return 10 ** self._interp(log10v)
+        elif v > 400:
+            log10v = np.log10(400)
+            match = 10 ** self._interp(log10v)
+            return match * (400 / v) ** 4
+        else:
+            log10v = np.log10(v)
+            return 10 ** self._interp(log10v)
+
+    def _velocity_dependence_kernel(self, v):
+
+        if isinstance(v, float) or isinstance(v, int):
+            return self._extrapolate(v)/self._mchi**3
+        else:
+            out = [self._extrapolate(vi) for vi in v]
+            return np.array(out)/self._mchi**3
+
+
+# import matplotlib.pyplot as plt
+# plt.rcParams['axes.linewidth'] = 2.5
+# plt.rcParams['xtick.major.width'] = 3.5
+# plt.rcParams['xtick.major.size'] = 10
+# plt.rcParams['xtick.minor.size'] = 6
+# plt.rcParams['ytick.minor.size'] = 6
+# plt.rcParams['ytick.major.width'] = 3.5
+# plt.rcParams['ytick.major.size'] = 10
+# plt.rcParams['ytick.labelsize'] = 20
+# plt.rcParams['xtick.labelsize'] = 20
+#
+# model = Benchmark2(38.1, auto_interp=False)
+# out = model.kappa_beta(v=16)
+# print('kappa', out['kappa'])
+# print('beta', -out['beta'])
+# print('2 * beta * kapp^2', -out['twobetak2'])
+#
+# v = np.logspace(0, 2.4, 1000)
+# sigma_v = model.evaluate(v)
+#
+# fig = plt.figure(1)
+# fig.set_size_inches(6,6)
+# ax = plt.subplot(111)
+# ax.loglog(v, sigma_v, color='k', lw=3)
+# ax.set_xlabel(r'$v \ \left[\rm{\rm{km} \ \rm{s^{-1}}}\right]$', fontsize=20)
+# ax.set_ylabel(r'$\sigma_V \ \left[\rm{cm^2} \ \rm{g^{-1}}\right]$', fontsize=20)
+# ax.set_xlim(v[0], v[-1])
+# plt.tight_layout()
+# plt.savefig('cross_section_plot.pdf')
+# plt.show()
